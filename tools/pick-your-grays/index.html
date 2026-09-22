@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pick Your Grays</title>
+<meta name="description" content="Pick one dark gray or one white, get the whole neutral scale, jobs for both modes, 12 contrast checks, and a globals.css snippet.">
+<style>
+  /* The page themes itself with the grays you pick. These get overwritten by JS. */
+  :root {
+    --bg: #09090b;
+    --card: #18181b;
+    --muted: #27272a;
+    --border: #27272a;
+    --text: #fafafa;
+    --text2: #a1a1aa;
+    --disabled: #52525b;
+    --brand: #3b82f6;
+    --brand-fg: #ffffff;
+    --ok: #22c55e;
+    --warn: #f59e0b;
+    --bad: #ef4444;
+    --shadow: none;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  a { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+  h1, h2, h3 { margin: 0; letter-spacing: -0.02em; font-weight: 600; line-height: 1.15; }
+  h1 { font-size: 40px; }
+  h2 { font-size: 24px; }
+  h3 { font-size: 18px; font-weight: 500; letter-spacing: 0; }
+  p { margin: 0; max-width: 65ch; }
+  .muted { color: var(--text2); }
+  .small { font-size: 14px; }
+  .xs { font-size: 12px; }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 48px 24px 96px; display: grid; gap: 48px; }
+  @media (max-width: 640px) { .page { padding: 32px 16px 64px; gap: 32px; } h1 { font-size: 32px; } }
+
+  header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--text2); font-weight: 500; }
+
+  section { display: grid; gap: 16px; }
+  .step { display: flex; align-items: baseline; gap: 12px; }
+  .step .n { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--text2); font-weight: 500; }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+  .grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 800px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+  /* controls */
+  label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .field { display: grid; gap: 6px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  input[type="text"] {
+    height: 40px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font: inherit; font-size: 14px; width: 100%;
+  }
+  input[type="text"]:focus-visible, button:focus-visible, input[type="range"]:focus-visible, select:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 2px;
+  }
+  input[type="color"] { width: 40px; height: 40px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: none; cursor: pointer; }
+  input[type="range"] { width: 100%; accent-color: var(--brand); }
+  .range-head { display: flex; justify-content: space-between; font-size: 14px; }
+  .range-head .val { font-variant-numeric: tabular-nums; color: var(--text2); }
+  .hint { font-size: 12px; color: var(--text2); }
+
+  button {
+    height: 40px; padding: 0 16px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  button:hover { background: var(--muted); }
+  button.primary { background: var(--brand); color: var(--brand-fg); border-color: transparent; }
+  button.primary:hover { filter: brightness(1.08); }
+  button.ghost { border-color: transparent; background: transparent; }
+  button.ghost:hover { background: var(--muted); }
+  button[aria-pressed="true"] { background: var(--muted); border-color: var(--text2); }
+  button.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; height: auto; min-height: 36px; padding: 6px 12px; line-height: 1.2; }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+  /* anchor swatch */
+  .anchor { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; }
+  .anchor .sw { width: 96px; height: 96px; border-radius: var(--radius); border: 1px solid var(--border); }
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+  .checks li { display: flex; gap: 10px; align-items: flex-start; }
+  .dot { flex: none; width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 600; margin-top: 3px; color: #fff; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+
+  /* scale */
+  .scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
+  .scale .st { display: grid; gap: 6px; text-align: center; }
+  .scale .sw { height: 56px; border-radius: 6px; border: 1px solid var(--border); }
+  .scale .lbl { font-size: 12px; font-weight: 500; }
+  .scale .hex { font-size: 11px; color: var(--text2); font-family: ui-monospace, Menlo, monospace; }
+  @media (max-width: 640px) { .scale { grid-template-columns: repeat(6, 1fr); } .scale .hex { display: none; } }
+  .gap-flags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .flag { font-size: 12px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--muted); }
+  .flag.bad { border-color: var(--bad); }
+  .flag.warn { border-color: var(--warn); }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); font-weight: 500; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; }
+  .chip i { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--border); display: inline-block; }
+  .pass { color: var(--ok); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; } .border-ok { color: var(--text2); }
+  .tip { font-size: 12px; color: var(--text2); }
+
+  /* preview cards */
+  .preview { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .preview { grid-template-columns: 1fr 1fr; } }
+  .pv { padding: 24px; border-radius: var(--radius); display: grid; gap: 16px; }
+  .pv .pcard { padding: 20px; border-radius: var(--radius); display: grid; gap: 12px; }
+  .pv h3 { font-size: 18px; font-weight: 600; }
+  .pv .line { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 6px; font-size: 14px; }
+  .pv .btn { height: 36px; padding: 0 14px; border-radius: 6px; border: 0; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; width: max-content; }
+  .pv .inp { height: 36px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 14px; }
+  .pv .tag { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+
+  /* examples */
+  .examples { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .examples { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 960px) { .examples { grid-template-columns: 1fr 1fr 1fr; } }
+  .ex { display: grid; gap: 12px; }
+  .ex .strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .ex .strip i { display: block; height: 36px; border-radius: 4px; border: 1px solid var(--border); }
+  .ex .strip.light i { border-color: rgba(0,0,0,.12); }
+  .ex .k { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; font-size: 10px; color: var(--text2); text-align: center; }
+  .ex .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .ex .head b { font-weight: 600; }
+
+  /* export */
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+  textarea {
+    width: 100%; min-height: 320px; padding: 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; resize: vertical;
+  }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .toast.show { opacity: 1; }
+  footer { border-top: 1px solid var(--border); padding-top: 24px; font-size: 14px; color: var(--text2); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div>
+      <div class="eyebrow">A one-decision guide</div>
+      <h1>Pick Your Grays</h1>
+      <p class="muted" style="margin-top:8px">Pick one dark gray, or one white. Get the whole scale, the jobs for both modes, twelve contrast checks, and a <code>globals.css</code> snippet. The page re-themes itself with what you pick.</p>
+    </div>
+    <div class="field">
+      <label for="previewMode">Preview this page in</label>
+      <div class="seg" id="previewSeg" role="group" aria-label="Preview mode">
+        <button type="button" data-preview="dark" aria-pressed="true">Dark</button>
+        <button type="button" data-preview="light" aria-pressed="false">Light</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- STEP 1 -->
+  <section>
+    <div class="step"><span class="n">Step 1</span><h2>Pick your starting color</h2></div>
+    <p class="muted">Everything else comes from this one color. Dark first is easier: if your grays work on dark, light mode is a mirror.</p>
+
+    <div class="grid2">
+      <div class="card" style="display:grid;gap:20px">
+        <div class="field">
+          <label>Start from</label>
+          <div class="seg" id="startSeg" role="group" aria-label="Start from">
+            <button type="button" data-start="dark" aria-pressed="true">Dark background (950)</button>
+            <button type="button" data-start="light" aria-pressed="false">Light “white” (50)</button>
+          </div>
+          <div class="hint" id="startHint"></div>
+        </div>
+
+        <div class="field">
+          <label for="brandHex">Your brand color</label>
+          <div class="row">
+            <input type="color" id="brandColor" value="#2563eb" aria-label="Brand color picker">
+            <input type="text" id="brandHex" value="#2563eb" class="mono" style="width:120px" spellcheck="false">
+            <button type="button" id="tintFromBrand">Tint gray from brand</button>
+          </div>
+          <div class="hint">Rule 2: the gray keeps your brand hue at 3–10% saturation. This is treated as your 600 step (light mode). The 500 step for dark is derived.</div>
+        </div>
+
+        <div class="field">
+          <label>Or start with a safe pick</label>
+          <div class="row" id="presets">
+            <button type="button" data-preset="slate">slate · cool</button>
+            <button type="button" data-preset="zinc">zinc · neutral</button>
+            <button type="button" data-preset="stone">stone · warm</button>
+          </div>
+          <div class="hint">Beginner shortcut. These already follow every rule. Build your own on project three.</div>
+        </div>
+
+        <div class="field">
+          <div class="range-head"><label for="hue" style="margin:0">Hue</label><span class="val" id="hueVal"></span></div>
+          <input type="range" id="hue" min="0" max="360" step="1" value="240">
+          <div class="hint">Blue / indigo / violet → ~220–250 (cool). Red / pink / none → ~240 at very low saturation (neutral). Green / orange / amber / brown → ~20–40 (warm).</div>
+        </div>
+
+        <div class="field">
+          <div class="range-head"><label for="sat" style="margin:0">Saturation</label><span class="val" id="satVal"></span></div>
+          <input type="range" id="sat" min="0" max="50" step="1" value="10">
+          <div class="hint">3–10% reads as gray. Above about 12% you can name the color at a glance, and it's too much. The scale keeps this saturation on every step, so judge it by the 500 swatch, not the dark anchor: Tailwind's slate-950 is 47% saturated and only gets away with it because it's nearly black.</div>
+        </div>
+
+        <div class="field">
+          <div class="range-head"><label for="light" style="margin:0" id="lightLabel">Lightness</label><span class="val" id="lightVal"></span></div>
+          <input type="range" id="light" min="0" max="12" step="1" value="4">
+          <div class="hint" id="lightHint"></div>
+        </div>
+      </div>
+
+      <div class="card" style="display:grid;gap:20px;align-content:start">
+        <div class="anchor">
+          <div class="sw" id="anchorSw"></div>
+          <div class="field">
+            <label for="anchorHex" id="anchorLabel">My dark background (950)</label>
+            <input type="text" id="anchorHex" class="mono" spellcheck="false" aria-describedby="anchorHsl">
+            <div class="hint mono" id="anchorHsl"></div>
+          </div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px">Rule check</h3>
+          <ul class="checks" id="ruleChecks"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section>
+    <div class="step"><span class="n">Step 2</span><h2>Build the scale</h2></div>
+    <p class="muted">Eleven steps from one color. Keep the hue. Keep the saturation. Only change lightness, using the ladder 5 · 10 · 16 · 25 · 33 · 46 · 64 · 83 · 90 · 96 · 98. The steps bunch up at the light end because the eye can tell light grays apart and you need many for backgrounds and borders.</p>
+    <div class="card" style="display:grid;gap:16px">
+      <div class="scale" id="scale"></div>
+      <div class="row" style="justify-content:space-between">
+        <div class="gap-flags" id="neighbor"></div>
+        <label class="row small" style="margin:0;font-weight:400"><input type="checkbox" id="boost"> Add +3 saturation to the dark steps (950–700) so they don't go muddy</label>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section>
+    <div class="step"><span class="n">Step 3</span><h2>Give each step a job</h2></div>
+    <p class="muted">Dark mode uses six of the eleven. Light mode mirrors the jobs, not the hexes. Lighter means closer to the viewer on dark; on light, depth comes from border and shadow instead.</p>
+    <div class="grid2">
+      <div class="card">
+        <h3 style="margin-bottom:12px">Dark mode</h3>
+        <table><thead><tr><th>Job</th><th>Step</th><th>Hex</th></tr></thead><tbody id="jobsDark"></tbody></table>
+      </div>
+      <div class="card">
+        <h3 style="margin-bottom:12px">Light mode</h3>
+        <table><thead><tr><th>Job</th><th>Step</th><th>Hex</th></tr></thead><tbody id="jobsLight"></tbody></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section>
+    <div class="step"><span class="n">Step 4</span><h2>Check contrast</h2></div>
+    <p class="muted">Twelve pairs. Text needs 4.5:1. Borders only need to be visible. If one fails, move the step, not the rule.</p>
+    <div class="card" style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Pair</th><th>Need</th><th>Result</th><th></th></tr></thead>
+        <tbody id="contrast"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- PREVIEW -->
+  <section>
+    <div class="step"><span class="n">Preview</span><h2>Same card, both modes</h2></div>
+    <div class="preview" id="preview"></div>
+  </section>
+
+  <!-- EXAMPLES -->
+  <section>
+    <div class="step"><span class="n">Real examples</span><h2>How popular apps do it</h2></div>
+    <p class="muted">Same jobs, every time. Nobody uses pure mid-gray: GitHub leans blue, Material leans violet, Notion leans warm. Discord skips near-black and lifts the whole page. Apple uses true black and pays for it with three gray layers. Values are sampled from public design systems and UI; close, not exact. Click one to start from its page color.</p>
+    <div class="examples" id="examples"></div>
+  </section>
+
+  <!-- EXPORT -->
+  <section>
+    <div class="step"><span class="n">Export</span><h2>Paste it into your project</h2></div>
+    <div class="card" style="display:grid;gap:12px">
+      <div class="row" style="justify-content:space-between">
+        <div class="tabs" id="exportTabs" role="tablist">
+          <button type="button" class="sm" data-tab="css" aria-pressed="true">globals.css</button>
+          <button type="button" class="sm" data-tab="tailwind" aria-pressed="false">Tailwind @theme</button>
+          <button type="button" class="sm" data-tab="json" aria-pressed="false">JSON</button>
+          <button type="button" class="sm" data-tab="prompt" aria-pressed="false">Prompt for your agent</button>
+        </div>
+        <div class="row">
+          <button type="button" class="sm" id="shareBtn">Copy share link</button>
+          <button type="button" class="sm primary" id="copyBtn">Copy</button>
+        </div>
+      </div>
+      <textarea id="exportOut" readonly spellcheck="false" aria-label="Export output"></textarea>
+    </div>
+  </section>
+
+  <footer>
+    The six rules: 1. Background is dark gray, not black. 2. Tint it toward your brand hue, 3–10% saturation. 3. Text is the 50 step, not white. 4. Build 11 steps by changing only lightness; pass the neighbor test. 5. Brand is 500 on dark, 600 on light. 6. Light mode mirrors the jobs, not the hex values.
+    &nbsp;·&nbsp; <a href="RULES.md">Rules</a> &nbsp;·&nbsp; <a href="PROMPT.md">Prompt</a> &nbsp;·&nbsp; <a href="Pick-Your-Grays.pdf">PDF</a>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="examples/examples.js"></script>
+<script>
+/* ---------- color math ---------- */
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+function hslToRgb(h, s, l) {
+  s /= 100; l /= 100;
+  const k = n => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  return [f(0), f(8), f(4)].map(v => Math.round(clamp(v, 0, 1) * 255));
+}
+function rgbToHex([r, g, b]) { return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join(''); }
+function hexToRgb(hex) {
+  let h = hex.replace('#', '').trim();
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  if (!/^[0-9a-f]{6}$/i.test(h)) return null;
+  return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+}
+function rgbToHsl([r, g, b]) {
+  r /= 255; g /= 255; b /= 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b);
+  let h = 0, s = 0; const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      default: h = (r - g) / d + 4;
+    }
+    h *= 60;
+  }
+  return [Math.round(h), Math.round(s * 100), Math.round(l * 100)];
+}
+const hsl = (h, s, l) => rgbToHex(hslToRgb(h, s, l));
+function lum(hex) {
+  const c = hexToRgb(hex).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+}
+function contrast(a, b) {
+  const l1 = lum(a), l2 = lum(b);
+  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return (hi + 0.05) / (lo + 0.05);
+}
+const fmt = r => (Math.round(r * 10) / 10).toFixed(1) + ':1';
+
+/* ---------- the ladder ---------- */
+const STEPS = [950, 900, 800, 700, 600, 500, 400, 300, 200, 100, 50];
+const LADDER = [5, 10, 16, 25, 33, 46, 64, 83, 90, 96, 98];
+const PRESETS = {
+  // Same hues as Tailwind slate / zinc / stone. Saturation is held at 10 because the
+  // scale keeps one S value on every step: slate-950's real S47 hides at L5 but would
+  // turn the 500 step blue.
+  slate: { h: 222, s: 10, l: 5, note: 'Slate: hue 222 at 10% saturation (Tailwind\'s slate-950 is 47%, which only hides because it is nearly black)' },
+  zinc:  { h: 240, s: 10, l: 4, note: 'Zinc: hue 240 at 10% saturation, the neutral default' },
+  stone: { h: 20,  s: 10, l: 4, note: 'Stone: hue 20 at 10% saturation, warm' },
+};
+
+/* ---------- state ---------- */
+const state = {
+  start: 'dark',      // 'dark' anchors the 950 step, 'light' anchors the 50 step
+  preview: 'dark',
+  h: 240, s: 10, l: 4,
+  lightL: 98,         // remembered when switching start mode
+  brand: '#2563eb',
+  boost: false,
+  tab: 'css',
+};
+
+function buildScale() {
+  const L = [...LADDER];
+  if (state.start === 'dark') {
+    L[0] = state.l;
+    for (let i = 1; i < L.length; i++) L[i] = Math.max(L[i], L[i - 1] + (i < 7 ? 4 : 2));
+    L[10] = state.lightL; // still let the 50 step be what the user chose last time
+    for (let i = 9; i >= 0; i--) L[i] = Math.min(L[i], L[i + 1] - 2);
+  } else {
+    L[10] = state.l;
+    for (let i = 9; i >= 0; i--) L[i] = Math.min(L[i], L[i + 1] - 2);
+  }
+  return STEPS.map((step, i) => {
+    const s = state.boost && i <= 3 ? clamp(state.s + 3, 0, 100) : state.s;
+    const l = clamp(L[i], 0, 100);
+    return { step, l, s, hex: hsl(state.h, s, l) };
+  });
+}
+const byStep = scale => Object.fromEntries(scale.map(x => [x.step, x.hex]));
+
+function brandPair() {
+  const rgb = hexToRgb(state.brand) || hexToRgb('#2563eb');
+  const [h, s, l] = rgbToHsl(rgb);
+  const b600 = rgbToHex(rgb);
+  const b500 = hsl(h, Math.round(s * 0.85), clamp(l + 8, 0, 72));
+  return { b600, b500 };
+}
+
+function jobs(scale) {
+  const g = byStep(scale);
+  const { b600, b500 } = brandPair();
+  return {
+    dark: {
+      page: { step: 950, hex: g[950], why: 'The base. Not black.' },
+      card: { step: 900, hex: g[900], why: 'One step lighter = on top.' },
+      muted: { step: 800, hex: g[800], why: 'Two steps up. Hover, input.' },
+      border: { step: 800, hex: g[800], why: 'Same as muted. Just visible.' },
+      disabled: { step: 600, hex: g[600], why: 'Readable but clearly off.' },
+      text2: { step: 400, hex: g[400], why: 'Passes 4.5:1 on 950. 500 does not.' },
+      text: { step: 50, hex: g[50], why: 'Your white.' },
+      brand: { step: '500', hex: b500, why: 'Lighter pops on black. Saturation pulled back.' },
+    },
+    light: {
+      page: { step: 'white', hex: '#ffffff', why: 'Pure white is fine for the page.' },
+      card: { step: 'white', hex: '#ffffff', why: 'Same as page. Depth from border + shadow.' },
+      muted: { step: 100, hex: g[100], why: 'One step off white.' },
+      border: { step: 200, hex: g[200], why: 'Two steps off white.' },
+      disabled: { step: 400, hex: g[400], why: '' },
+      text2: { step: 500, hex: g[500], why: '500 passes on white. 400 fails.' },
+      text: { step: 950, hex: g[950], why: 'Your black. Not #000.' },
+      brand: { step: '600', hex: b600, why: 'Darker on light so white text passes.' },
+    },
+  };
+}
+
+function contrastRows(j, g) {
+  const d = j.dark, l = j.light;
+  return [
+    { mode: 'Dark', name: 'Main text (50) on page (950)', fg: d.text.hex, bg: d.page.hex, need: 4.5, tip: 'Lower the 950 lightness.' },
+    { mode: 'Dark', name: 'Main text (50) on card (900)', fg: d.text.hex, bg: d.card.hex, need: 4.5, tip: 'Lower the 950 lightness so 900 comes down too.' },
+    { mode: 'Dark', name: 'Secondary text (400) on page (950)', fg: d.text2.hex, bg: d.page.hex, need: 4.5, tip: 'Use 300 for secondary text, or lower the background.' },
+    { mode: 'Dark', name: 'Secondary text (400) on card (900)', fg: d.text2.hex, bg: d.card.hex, need: 4.5, tip: 'Use 300 for secondary text on cards.' },
+    { mode: 'Dark', name: 'Border (800) on page (950)', fg: d.border.hex, bg: d.page.hex, need: 1.2, deco: true, tip: 'Use 700 for borders.' },
+    { mode: 'Dark', name: 'Text (50) on brand (500)', fg: d.text.hex, bg: d.brand.hex, need: 4.5, tip: 'Use the 600 brand step for text-heavy buttons.' },
+    { mode: 'Light', name: 'Main text (950) on white', fg: l.text.hex, bg: l.page.hex, need: 4.5, tip: '' },
+    { mode: 'Light', name: 'Secondary text (500) on white', fg: l.text2.hex, bg: l.page.hex, need: 4.5, tip: 'Use 600 for secondary text.' },
+    { mode: 'Light', name: 'Secondary text (500) on muted (100)', fg: l.text2.hex, bg: l.muted.hex, need: 4.5, tip: 'Borderline by design. Use 600 inside muted fills.' },
+    { mode: 'Light', name: 'Main text (950) on muted (100)', fg: l.text.hex, bg: l.muted.hex, need: 4.5, tip: '' },
+    { mode: 'Light', name: 'Border (200) on white', fg: l.border.hex, bg: l.page.hex, need: 1.2, deco: true, tip: 'Use 300 for borders.' },
+    { mode: 'Light', name: 'White on brand (600)', fg: '#ffffff', bg: l.brand.hex, need: 4.5, tip: 'Pick a darker brand step (700) for buttons with text.' },
+  ].map(r => ({ ...r, ratio: contrast(r.fg, r.bg) }));
+}
+
+/* ---------- rendering ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function renderControls() {
+  $('hue').value = state.h; $('hueVal').textContent = state.h + '°';
+  $('sat').value = state.s; $('satVal').textContent = state.s + '%';
+  const lightEl = $('light');
+  if (state.start === 'dark') {
+    lightEl.min = 0; lightEl.max = 14;
+    $('lightHint').textContent = 'Rule 1: not black. 3–8% lightness. 0% is #000 and makes everything float.';
+    $('anchorLabel').textContent = 'My dark background (950)';
+    $('startHint').textContent = 'Recommended. Pick the 950 step; the 50 step (your “white”) lands at 98% lightness.';
+  } else {
+    lightEl.min = 90; lightEl.max = 100;
+    $('lightHint').textContent = 'Rule 3: not pure white. 96–99% lightness. 100% is #fff and glows on dark.';
+    $('anchorLabel').textContent = 'My light “white” (50)';
+    $('startHint').textContent = 'Pick the 50 step (your text on dark, and your muted fills on light). The 950 step lands at 5% lightness.';
+  }
+  lightEl.value = state.l; $('lightVal').textContent = state.l + '%';
+  const anchor = hsl(state.h, state.s, state.l);
+  $('anchorSw').style.background = anchor;
+  if (document.activeElement !== $('anchorHex')) $('anchorHex').value = anchor;
+  $('anchorHsl').textContent = `H ${state.h}  S ${state.s}%  L ${state.l}%`;
+  if (document.activeElement !== $('brandHex')) $('brandHex').value = state.brand;
+  if (hexToRgb(state.brand)) $('brandColor').value = state.brand;
+  $('boost').checked = state.boost;
+  document.querySelectorAll('#startSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.start === state.start));
+  document.querySelectorAll('#previewSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.preview === state.preview));
+  document.querySelectorAll('#exportTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === state.tab));
+  const match = Object.entries(PRESETS).find(([, p]) => p.h === state.h && p.s === state.s && p.l === state.l && state.start === 'dark' && !state.boost);
+  document.querySelectorAll('#presets button').forEach(b => b.setAttribute('aria-pressed', !!match && match[0] === b.dataset.preset));
+}
+
+function renderRuleChecks(scale) {
+  const items = [];
+  const g = byStep(scale);
+  const pick = (ok, warn, text) => items.push({ cls: ok ? 'ok' : warn ? 'warn' : 'bad', text });
+  if (state.start === 'dark') {
+    if (state.l === 0) pick(false, false, 'Rule 1 · That is #000. Everything on top will look like it floats. Raise lightness to 3–8%.');
+    else if (state.l < 3) pick(false, true, `Rule 1 · Lightness ${state.l}% is almost black. 3–8% is the safe zone.`);
+    else if (state.l > 8) pick(false, true, `Rule 1 · Lightness ${state.l}% is lifted, like Discord. It works, but it feels softer and you lose some depth for cards.`);
+    else pick(true, false, `Rule 1 · Not black. Lightness ${state.l}% is in the 3–8% zone.`);
+  } else {
+    if (state.l === 100) pick(false, false, 'Rule 3 · That is #fff. White text glows on dark. Drop to 96–99%.');
+    else if (state.l < 96) pick(false, true, `Rule 3 · Lightness ${state.l}% is a bit dim for main text. 96–99% is the safe zone.`);
+    else pick(true, false, `Rule 3 · Not pure white. Lightness ${state.l}% is in the 96–99% zone.`);
+  }
+  if (state.s > 12) pick(false, false, `Rule 2 · Saturation ${state.s}% reads as a color in the mid steps (look at the 500 swatch). Drop to 3–10%.`);
+  else if (state.s > 10) pick(false, true, `Rule 2 · Saturation ${state.s}% is at the edge. Squint: can you name the color? Then drop it.`);
+  else if (state.s < 3) pick(false, true, `Rule 2 · Saturation ${state.s}% is a pure gray. Fine, but a 3–10% tint toward your brand hue feels more intentional.`);
+  else pick(true, false, `Rule 2 · A hint of hue ${state.h}° at ${state.s}% saturation. Reads as gray.`);
+  if (state.start === 'dark') {
+    pick(g[50] !== '#ffffff', true, `Rule 3 · Main text on dark will be the 50 step, ${g[50]}, not #fff.`);
+  } else {
+    pick(g[950] !== '#000000', true, `Rule 1 · Page background on dark will be the 950 step, ${g[950]}, not #000.`);
+  }
+  const brandRgb = hexToRgb(state.brand);
+  if (brandRgb) {
+    const [bh, bs] = rgbToHsl(brandRgb);
+    let diff = Math.abs(bh - state.h); diff = Math.min(diff, 360 - diff);
+    if (bs < 15) pick(true, false, 'Brand is near-black or gray. A neutral tint (zinc) fits.');
+    else if (diff <= 40 || state.s < 3) pick(true, false, `Gray hue ${state.h}° matches your brand hue ${bh}°.`);
+    else pick(false, true, `Your brand hue is ${bh}° but the gray hue is ${state.h}°. Press “Tint gray from brand” unless you want the contrast on purpose.`);
+  } else {
+    pick(false, true, 'Brand hex is not valid. Use #rrggbb.');
+  }
+  $('ruleChecks').innerHTML = items.map(i => `<li><span class="dot ${i.cls}">${i.cls === 'ok' ? '✓' : i.cls === 'warn' ? '!' : '✕'}</span><span>${esc(i.text)}</span></li>`).join('');
+}
+
+function renderScale(scale) {
+  $('scale').innerHTML = scale.map(x => `<div class="st"><div class="sw" style="background:${x.hex}" title="${x.hex}"></div><div class="lbl">${x.step}</div><div class="hex">${x.hex}<br>L ${x.l}</div></div>`).join('');
+  const flags = [];
+  for (let i = 0; i < scale.length - 1; i++) {
+    const a = scale[i], b = scale[i + 1];
+    const dl = b.l - a.l;
+    if (dl < 2) flags.push(`<span class="flag bad">${a.step} and ${b.step} look the same (ΔL ${dl})</span>`);
+    else if (dl > 20) flags.push(`<span class="flag warn">${a.step} → ${b.step} is a big jump (ΔL ${dl})</span>`);
+  }
+  $('neighbor').innerHTML = flags.length ? flags.join('') : '<span class="flag">Neighbor test passed: all 11 steps differ, no jump over 20 points.</span>';
+}
+
+function jobRows(m) {
+  const order = [['page', 'Page background'], ['card', 'Card, panel, dialog'], ['muted', 'Muted fill, hover, input'], ['border', 'Border, divider'], ['disabled', 'Disabled, placeholder'], ['text2', 'Secondary text'], ['text', 'Main text, headings'], ['brand', 'Brand']];
+  return order.map(([k, label]) => {
+    const j = m[k];
+    return `<tr><td>${label}<div class="tip">${esc(j.why)}</div></td><td class="num">${j.step}</td><td><span class="chip"><i style="background:${j.hex}"></i><code>${j.hex}</code></span></td></tr>`;
+  }).join('');
+}
+
+function renderContrast(rows) {
+  $('contrast').innerHTML = rows.map(r => {
+    const pass = r.ratio >= r.need;
+    const cls = pass ? (r.deco ? 'border-ok' : 'pass') : 'fail';
+    const label = pass ? '✓' : '✕ ' + (r.tip || 'Move the step.');
+    return `<tr><td><span class="xs muted">${r.mode}</span><br><span class="chip"><i style="background:${r.bg};color:${r.fg};display:inline-grid;place-items:center;font-size:12px;font-weight:600;width:24px;height:24px">Aa</i>${esc(r.name)}</span></td><td class="num">${r.need}:1${r.deco ? '<div class="tip">decorative</div>' : ''}</td><td class="num ${cls}">${fmt(r.ratio)}</td><td class="tip ${pass ? '' : 'fail'}" style="font-weight:400">${esc(label)}</td></tr>`;
+  }).join('');
+}
+
+function previewCard(mode, m) {
+  const shadow = mode === 'light' ? '0 1px 2px 0 rgb(0 0 0 / .05)' : 'none';
+  return `<div class="pv" style="background:${m.page.hex};color:${m.text.hex}">
+    <div class="tag" style="color:${m.text2.hex}">${mode} · page ${m.page.step}</div>
+    <div class="pcard" style="background:${m.card.hex};border:1px solid ${m.border.hex};box-shadow:${shadow}">
+      <h3>Apartment 4B</h3>
+      <div style="color:${m.text2.hex};font-size:14px">3 things left to buy · secondary ${m.text2.step}</div>
+      <div class="line" style="background:${m.muted.hex}">Oat milk <span style="color:${m.text2.hex}">muted ${m.muted.step}</span></div>
+      <div class="line" style="border:1px solid ${m.border.hex}">Eggs <span style="color:${m.text2.hex}">border ${m.border.step}</span></div>
+      <div class="inp" style="background:${mode === 'dark' ? m.muted.hex : m.page.hex};border:1px solid ${m.border.hex};color:${m.disabled.hex}">Add an item… · placeholder ${m.disabled.step}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="btn" style="background:${m.brand.hex};color:#ffffff">Add item · brand ${m.brand.step}</span>
+        <span class="btn" style="background:transparent;border:1px solid ${m.border.hex};color:${m.text.hex}">Cancel</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderExamples() {
+  const list = window.GRAY_EXAMPLES || [];
+  $('examples').innerHTML = list.map((e, i) => {
+    const d = e.dark, l = e.light;
+    const strip = (o, keys, cls) => `<div class="strip ${cls}">${keys.map(k => `<i style="background:${o[k]}" title="${k} ${o[k]}"></i>`).join('')}</div>`;
+    const [h, s, li] = rgbToHsl(hexToRgb(d.page));
+    return `<div class="card ex">
+      <div class="head"><b>${esc(e.name)}</b><span class="xs muted">${esc(e.tint)}</span></div>
+      ${strip(d, ['page', 'card', 'border', 'secondaryText', 'text'], 'dark')}
+      <div class="k"><span>page</span><span>card</span><span>border</span><span>2nd text</span><span>text</span></div>
+      ${l ? strip(l, ['page', 'muted', 'border', 'secondaryText', 'text'], 'light') + '<div class="k"><span>page</span><span>muted</span><span>border</span><span>2nd text</span><span>text</span></div>' : '<div class="xs muted">light mode not sampled</div>'}
+      <div class="row" style="justify-content:space-between">
+        <span class="xs mono muted">page ${d.page} · H${h} S${s} L${li} · text on page ${fmt(contrast(d.text, d.page))}</span>
+        <button type="button" class="sm" data-example="${i}">Start from this</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function themePage(j) {
+  const m = j[state.preview];
+  const r = document.documentElement.style;
+  r.setProperty('--bg', m.page.hex); r.setProperty('--card', m.card.hex); r.setProperty('--muted', m.muted.hex);
+  r.setProperty('--border', m.border.hex); r.setProperty('--text', m.text.hex); r.setProperty('--text2', m.text2.hex);
+  r.setProperty('--disabled', m.disabled.hex); r.setProperty('--brand', m.brand.hex);
+  r.setProperty('--shadow', state.preview === 'light' ? '0 1px 2px 0 rgb(0 0 0 / .05)' : 'none');
+  r.setProperty('--ok', state.preview === 'light' ? '#16a34a' : '#22c55e');
+  r.setProperty('--warn', state.preview === 'light' ? '#d97706' : '#f59e0b');
+  r.setProperty('--bad', state.preview === 'light' ? '#dc2626' : '#ef4444');
+}
+
+/* ---------- exports ---------- */
+function presetName() {
+  const match = Object.entries(PRESETS).find(([, p]) => p.h === state.h && p.s === state.s);
+  return match ? match[0] : 'gray';
+}
+function exportCss(j, g) {
+  const d = j.dark, l = j.light;
+  return `/* Pick Your Grays — paste over the matching lines in globals.css
+   Gray: hue ${state.h}° · saturation ${state.s}% · dark background ${g[950]} · white ${g[50]}
+   Brand: ${l.brand.hex} (light, 600) · ${d.brand.hex} (dark, 500) */
+
+:root {
+  --background: ${l.page.hex};
+  --foreground: ${l.text.hex};
+  --card: ${l.card.hex};
+  --card-foreground: ${l.text.hex};
+  --popover: ${l.card.hex};
+  --popover-foreground: ${l.text.hex};
+  --primary: ${l.brand.hex};
+  --primary-foreground: #ffffff;
+  --secondary: ${l.muted.hex};
+  --secondary-foreground: ${g[900]};
+  --muted: ${l.muted.hex};
+  --muted-foreground: ${l.text2.hex};
+  --accent: ${l.muted.hex};
+  --accent-foreground: ${g[900]};
+  --border: ${l.border.hex};
+  --input: ${l.border.hex};
+  --ring: ${l.brand.hex};
+}
+
+.dark {
+  --background: ${d.page.hex};
+  --foreground: ${d.text.hex};
+  --card: ${d.card.hex};
+  --card-foreground: ${d.text.hex};
+  --popover: ${d.card.hex};
+  --popover-foreground: ${d.text.hex};
+  --primary: ${d.brand.hex};
+  --primary-foreground: #ffffff;
+  --secondary: ${d.muted.hex};
+  --secondary-foreground: ${d.text.hex};
+  --muted: ${d.muted.hex};
+  --muted-foreground: ${d.text2.hex};
+  --accent: ${d.muted.hex};
+  --accent-foreground: ${d.text.hex};
+  --border: ${d.border.hex};
+  --input: ${d.border.hex};
+  --ring: ${d.brand.hex};
+}
+`;
+}
+function exportTailwind(scale) {
+  const n = presetName();
+  return `/* Tailwind CSS v4 — adds bg-${n}-950, text-${n}-400, etc.
+   Prefer the job tokens in globals.css for app code; use this scale for one-offs and charts. */
+@theme {
+${scale.map(x => `  --color-${n}-${x.step}: ${x.hex};`).join('\n')}
+}
+`;
+}
+function exportJson(scale, j) {
+  const out = {
+    source: { start: state.start, hue: state.h, saturation: state.s, lightness: state.l, brand: state.brand, boostDarkSaturation: state.boost },
+    scale: Object.fromEntries(scale.map(x => [x.step, x.hex])),
+    jobs: {
+      dark: Object.fromEntries(Object.entries(j.dark).map(([k, v]) => [k, v.hex])),
+      light: Object.fromEntries(Object.entries(j.light).map(([k, v]) => [k, v.hex])),
+    },
+  };
+  return JSON.stringify(out, null, 2) + '\n';
+}
+function exportPrompt(scale, j, rows) {
+  const g = byStep(scale);
+  const tint = state.s < 3 ? 'pure neutral' : ({ slate: 'cool (slate)', zinc: 'neutral (zinc)', stone: 'warm (stone)' }[presetName()] || `custom (hue ${state.h}°)`);
+  const fails = rows.filter(r => r.ratio < r.need);
+  return `Read RULES.md (Pick Your Grays) and follow every rule in it.
+
+My brand color is ${state.brand}. My gray tint is ${tint}.
+My dark background (950) is ${g[950]} (H ${state.h} S ${state.s}% L ${scale[0].l}%).
+My "white" (50) is ${g[50]}.
+
+I already built the scale. Use these exact hexes, do not regenerate them:
+${scale.map(x => `  ${x.step}: ${x.hex}`).join('\n')}
+
+Jobs (dark → light):
+  page background  ${j.dark.page.hex} → ${j.light.page.hex}
+  card / panel     ${j.dark.card.hex} → ${j.light.card.hex}
+  muted / hover    ${j.dark.muted.hex} → ${j.light.muted.hex}
+  border           ${j.dark.border.hex} → ${j.light.border.hex}
+  disabled         ${j.dark.disabled.hex} → ${j.light.disabled.hex}
+  secondary text   ${j.dark.text2.hex} → ${j.light.text2.hex}
+  main text        ${j.dark.text.hex} → ${j.light.text.hex}
+  brand            ${j.dark.brand.hex} (500) → ${j.light.brand.hex} (600)
+
+Contrast: ${fails.length ? fails.length + ' pair(s) fail. Fix these first and tell me what you moved:\n' + fails.map(f => `  - ${f.mode}: ${f.name} is ${fmt(f.ratio)}, needs ${f.need}:1. ${f.tip}`).join('\n') : 'all 12 pairs pass. Keep it that way.'}
+
+Do this:
+1. Write these into globals.css as CSS variables under :root (light) and .dark (dark), using only the job names already in that file (--background, --foreground, --card, --card-foreground, --primary, --secondary, --muted, --muted-foreground, --accent, --border, --input, --ring). Do not add new variable names.
+2. Never use raw hex or raw Tailwind colors (bg-zinc-900, text-gray-500) anywhere else in the app. Job tokens only.
+3. Dark mode gets no shadows; depth is card (900) on page (950) with an 800 border. Light mode cards are white with a 200 border and shadow-sm.
+4. Report the exact lines you changed.
+`;
+}
+
+/* ---------- main render ---------- */
+let current = {};
+function render() {
+  const scale = buildScale();
+  const j = jobs(scale);
+  const g = byStep(scale);
+  const rows = contrastRows(j, g);
+  current = { scale, j, g, rows };
+  renderControls();
+  renderRuleChecks(scale);
+  renderScale(scale);
+  $('jobsDark').innerHTML = jobRows(j.dark);
+  $('jobsLight').innerHTML = jobRows(j.light);
+  renderContrast(rows);
+  $('preview').innerHTML = previewCard('dark', j.dark) + previewCard('light', j.light);
+  themePage(j);
+  renderExport();
+  save();
+}
+function renderExport() {
+  const { scale, j, g, rows } = current;
+  const out = state.tab === 'css' ? exportCss(j, g) : state.tab === 'tailwind' ? exportTailwind(scale) : state.tab === 'json' ? exportJson(scale, j) : exportPrompt(scale, j, rows);
+  $('exportOut').value = out;
+}
+
+/* ---------- persistence + share ---------- */
+function save() {
+  try { localStorage.setItem('pick-your-grays', JSON.stringify(state)); } catch (e) {}
+  try {
+    const p = new URLSearchParams({ start: state.start, h: state.h, s: state.s, l: state.l, brand: state.brand.replace('#', ''), boost: state.boost ? 1 : 0 });
+    history.replaceState(null, '', '#' + p.toString());
+  } catch (e) {}
+}
+function load() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('pick-your-grays') || 'null');
+    if (saved && typeof saved === 'object') Object.assign(state, saved);
+  } catch (e) {}
+  try {
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (p.has('h')) {
+      state.start = p.get('start') === 'light' ? 'light' : 'dark';
+      state.h = clamp(+p.get('h') || 0, 0, 360);
+      state.s = clamp(+p.get('s') || 0, 0, 50);
+      state.l = clamp(+p.get('l') || 0, 0, 100);
+      if (hexToRgb('#' + (p.get('brand') || ''))) state.brand = '#' + p.get('brand');
+      state.boost = p.get('boost') === '1';
+    }
+  } catch (e) {}
+  if (state.start === 'light') state.lightL = state.l;
+}
+
+/* ---------- events ---------- */
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 1600); }
+function setAnchorFromHex(hex) {
+  const rgb = hexToRgb(hex); if (!rgb) return false;
+  const [h, s, l] = rgbToHsl(rgb);
+  state.h = h; state.s = clamp(s, 0, 50); state.l = l;
+  if (state.start === 'light') state.lightL = l;
+  return true;
+}
+
+$('hue').addEventListener('input', e => { state.h = +e.target.value; render(); });
+$('sat').addEventListener('input', e => { state.s = +e.target.value; render(); });
+$('light').addEventListener('input', e => { state.l = +e.target.value; if (state.start === 'light') state.lightL = state.l; render(); });
+$('boost').addEventListener('change', e => { state.boost = e.target.checked; render(); });
+$('anchorHex').addEventListener('input', e => { if (setAnchorFromHex(e.target.value)) render(); });
+$('anchorHex').addEventListener('blur', render);
+$('brandHex').addEventListener('input', e => { if (hexToRgb(e.target.value)) { state.brand = e.target.value.startsWith('#') ? e.target.value.toLowerCase() : '#' + e.target.value.toLowerCase(); render(); } });
+$('brandHex').addEventListener('blur', render);
+$('brandColor').addEventListener('input', e => { state.brand = e.target.value; render(); });
+$('tintFromBrand').addEventListener('click', () => {
+  const rgb = hexToRgb(state.brand); if (!rgb) return;
+  const [h, s] = rgbToHsl(rgb);
+  state.h = h;
+  if (s < 15) { state.h = 240; state.s = clamp(state.s, 3, 10); toast('Brand is near-neutral, so the gray is zinc-like'); }
+  else if (state.s < 3 || state.s > 10) state.s = 8;
+  render();
+});
+$('presets').addEventListener('click', e => {
+  const b = e.target.closest('button[data-preset]'); if (!b) return;
+  const p = PRESETS[b.dataset.preset];
+  state.start = 'dark'; state.h = p.h; state.s = p.s; state.l = p.l; state.lightL = 98; state.boost = false;
+  render();
+  toast(p.note);
+});
+$('startSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-start]'); if (!b || b.dataset.start === state.start) return;
+  state.start = b.dataset.start;
+  state.l = state.start === 'dark' ? current.scale[0].l : state.lightL;
+  render();
+});
+$('previewSeg').addEventListener('click', e => {
+  const b = e.target.closest('button[data-preview]'); if (!b) return;
+  state.preview = b.dataset.preview; render();
+});
+$('exportTabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-tab]'); if (!b) return;
+  state.tab = b.dataset.tab; renderControls(); renderExport(); save();
+});
+$('examples').addEventListener('click', e => {
+  const b = e.target.closest('button[data-example]'); if (!b) return;
+  const ex = window.GRAY_EXAMPLES[+b.dataset.example];
+  state.start = 'dark';
+  setAnchorFromHex(ex.dark.page);
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast(`Starting from ${ex.name}'s page color`);
+});
+$('copyBtn').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('exportOut').value); toast('Copied'); }
+  catch (e) { $('exportOut').select(); toast('Select all and copy'); }
+});
+$('shareBtn').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(location.href); toast('Link copied'); }
+  catch (e) { toast('Copy the URL from the address bar'); }
+});
+
+load();
+renderExamples();
+render();
+</script>
+</body>
+</html>
