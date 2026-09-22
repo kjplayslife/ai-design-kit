@@ -206,12 +206,28 @@
   <!-- STEP 2 · 12-STEP SCALE -->
   <section>
     <div class="step"><span class="n">Step 2</span><h2>Your 12-step dark scale</h2></div>
-    <p class="muted">Generated from your gray. Same hue and saturation on every step, only lightness changes. Lighter = closer to you. Each step has one job. Click a step to nudge its lightness.</p>
+    <p class="muted">Generated from your gray. Same hue and saturation on every step, only lightness changes, unless you turn on the tint below. Lighter = closer to you. Each step has one job. Click a step to nudge its lightness.</p>
     <div class="card" style="padding:8px 16px 16px">
       <div class="steps" id="steps"></div>
       <div class="row" style="justify-content:space-between;margin-top:12px">
         <div class="gap-flags" id="neighbor"></div>
         <button type="button" class="link" id="resetSteps">Reset all steps</button>
+      </div>
+    </div>
+    <div class="card" style="display:grid;gap:16px">
+      <label class="row" style="margin:0;font-weight:500"><input type="checkbox" id="tintOn"> Tint the rest of the scale</label>
+      <p class="hint">Keeps step 1 exactly as you picked it and adds a hue to the steps above it. Steps 2–4 ramp in, 5–12 hold it. This is how xAI, Claude, and the Claude Code docs get a neutral page with tinted cards, borders, and text.</p>
+      <div class="grid2" id="tintControls" hidden>
+        <div class="field">
+          <div class="range-head"><label for="tintH" style="margin:0">Tint hue</label><span class="val" id="tintHVal"></span></div>
+          <input type="range" class="neutral" id="tintH" min="0" max="360" step="1" value="221">
+          <div class="hint">Defaults to your brand hue. Cool → 220–250. Warm → 20–40.</div>
+        </div>
+        <div class="field">
+          <div class="range-head"><label for="tintS" style="margin:0">Tint amount</label><span class="val" id="tintSVal"></span></div>
+          <input type="range" class="neutral" id="tintS" min="0" max="20" step="1" value="8">
+          <div class="hint">3–10% reads as gray. Over about 10%, steps 8–10 start to read as a color.</div>
+        </div>
       </div>
     </div>
   </section>
@@ -430,21 +446,33 @@ const JOBS12 = [
 const state = {
   h: 240, s: 8, l: 7, ov: {},            // ov: per-step lightness overrides, index -> L
   bh: 221, bs: 83, bl: 53, brandExact: '#2563eb', brand: '#2563eb',
+  tintOn: false, tintH: null, tintS: 8,     // tintH null = follow the brand hue
   lbAdj: 0, lText2: '11', lBorder: '6', lMuted: '3',
   source: '', open: null, stack: 'tailwind',
 };
 
+const tintHue = () => state.tintH == null ? state.bh : state.tintH;
+// Hue and saturation for step i (0-based). With tint on, step 1 keeps the base;
+// steps 2–4 ramp from the base saturation to the tint amount; 5–12 hold it.
+function stepHS(i) {
+  if (!state.tintOn || i === 0) return [state.h, state.s];
+  const t = Math.min(1, i / 3);
+  return [tintHue(), Math.round(state.s + (state.tintS - state.s) * t)];
+}
 function buildDark() {
   return DARK_OFFSETS.map((off, i) => {
     const base = i === 0 ? state.l : clamp(state.l + off, 0, 98);
     const l = state.ov[i] != null ? state.ov[i] : base;
-    return { n: i + 1, l, base, edited: state.ov[i] != null, hex: hsl(state.h, state.s, l) };
+    const [h, sat] = stepHS(i);
+    return { n: i + 1, l, base, edited: state.ov[i] != null, h, s: sat, hex: hsl(h, sat, l) };
   });
 }
 function buildLight(dark) {
   return LIGHT_L.map((l, i) => {
     const L = l == null ? dark[0].l + 6 : l;
-    return { n: i + 1, l: L, hex: hsl(state.h, state.s, L) };
+    // light mode mirrors the tint: the page (step 1) stays neutral like the dark page, the rest carries the tint
+    const [h, sat] = stepHS(i === 0 ? 0 : Math.max(i, 4));
+    return { n: i + 1, l: L, hex: hsl(h, sat, L) };
   });
 }
 const isNeutralBrand = () => state.bs < 25;
@@ -555,6 +583,10 @@ function renderControls() {
   $('bl').value = state.bl; $('blVal').textContent = state.bl + '%';
   $('brandHsl').textContent = `H ${state.bh}  S ${state.bs}%  L ${state.bl}%`;
 
+  $('tintOn').checked = state.tintOn;
+  $('tintControls').hidden = !state.tintOn;
+  $('tintH').value = tintHue(); $('tintHVal').textContent = tintHue() + '°' + (state.tintH == null ? ' (brand)' : '');
+  $('tintS').value = state.tintS; $('tintSVal').textContent = state.tintS + '%';
   $('lbAdj').value = state.lbAdj; $('lbAdjVal').textContent = (state.lbAdj > 0 ? '+' : '') + state.lbAdj;
   [['lText2Seg', 'lText2'], ['lBorderSeg', 'lBorder'], ['lMutedSeg', 'lMuted']].forEach(([id, key]) =>
     document.querySelectorAll('#' + id + ' button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state[key])));
@@ -569,9 +601,15 @@ function renderRuleChecks(D) {
   else pick('ok', `Not black. Lightness ${state.l}% is in the 3–8% zone.`);
   if (state.s > 12) pick('bad', `Saturation ${state.s}% reads as a color in the middle of the scale. Drop to 3–10%.`);
   else if (state.s > 10) pick('warn', `Saturation ${state.s}% is at the edge. Squint at steps 8–10 below: can you name the color? Then drop it.`);
-  else if (state.s < 3) pick('warn', `Saturation ${state.s}% is a pure gray. Fine, but a 3–10% tint toward your brand hue feels more intentional.`);
+  else if (state.s < 3 && state.tintOn) pick('ok', `Page is a pure gray on purpose; the tint below carries the hue.`);
+  else if (state.s < 3) pick('warn', `Saturation ${state.s}% is a pure gray. Fine, but a 3–10% tint toward your brand hue feels more intentional, or turn on “Tint the rest of the scale” below.`);
   else pick('ok', `A hint of hue ${state.h}° at ${state.s}% saturation. Reads as gray.`);
   pick('ok', `Text will be step 12, ${D[11].hex}, not #fff.`);
+  if (state.tintOn) {
+    if (state.tintS > 10) pick('warn', `Tint amount ${state.tintS}% is high. Steps 8–10 (${D[7].hex}, ${D[9].hex}) read as a color. Drop to 3–10%.`);
+    else if (state.tintS < 3) pick('warn', `Tint amount ${state.tintS}% is too low to see. Either raise it or turn the tint off.`);
+    else pick('ok', `Tinted scale: step 1 stays ${D[0].hex}, the rest carry hue ${tintHue()}° at ${state.tintS}%.`);
+  }
   if (!isNeutralBrand()) {
     let diff = Math.abs(state.bh - state.h); diff = Math.min(diff, 360 - diff);
     if (diff <= 40 || state.s < 3) pick('ok', `Gray hue ${state.h}° matches your brand hue ${state.bh}°.`);
@@ -587,7 +625,7 @@ function renderSteps(D) {
     return `<div class="steprow" data-step="${i}" role="button" tabindex="0" aria-expanded="${open}">
       <span class="num">${x.n}</span>
       <div class="sw" style="background:${x.hex}"></div>
-      <span class="hex mono">${x.hex}</span>
+      <span class="hex mono">${x.hex}${state.tintOn && i > 0 ? `<br><span class="xs">S ${x.s}%</span>` : ''}</span>
       <div><b>${job}</b>${x.edited ? `<div class="edited">nudged · was L ${x.base}</div>` : ''}</div>
       <span class="why">${why}</span>
       ${open ? `<div class="stepedit" data-stop="1">
@@ -718,7 +756,7 @@ function exportPrompt(D, Lt, j, rows) {
   const head = `You are setting up the color system for my app. Use these exact values. Do not invent, adjust, or "improve" any of them.
 
 MY GRAY
-  hue ${state.h}°, saturation ${state.s}%. Dark page ${D[0].hex}, dark text ${D[11].hex}.
+  hue ${state.h}°, saturation ${state.s}%. Dark page ${D[0].hex}, dark text ${D[11].hex}.${state.tintOn ? `\n  The page (step 1) is neutral; steps 2–12 carry a hue ${tintHue()}° tint at ${state.tintS}%. This is on purpose.` : ''}
 MY BRAND
   ${d.brand.hex} on dark (text on it: ${d.brand.fg}) · ${l.brand.hex} on light (text on it: ${l.brand.fg})
 
@@ -828,7 +866,7 @@ function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
   try {
     const ov = Object.entries(state.ov).map(([k, v]) => k + ':' + v).join(',');
-    const p = new URLSearchParams({ h: state.h, s: state.s, l: state.l, ov, brand: state.brand.replace('#', ''), lb: state.lbAdj, t2: state.lText2, bd: state.lBorder, mu: state.lMuted, stack: state.stack });
+    const p = new URLSearchParams({ h: state.h, s: state.s, l: state.l, ov, brand: state.brand.replace('#', ''), lb: state.lbAdj, t2: state.lText2, bd: state.lBorder, mu: state.lMuted, stack: state.stack, tint: state.tintOn ? (state.tintH == null ? 'b' : state.tintH) + ':' + state.tintS : '' });
     history.replaceState(null, '', '#' + p.toString());
   } catch (e) {}
 }
@@ -847,6 +885,9 @@ function load() {
       if (['6', '7'].includes(p.get('bd'))) state.lBorder = p.get('bd');
       if (['3', '2'].includes(p.get('mu'))) state.lMuted = p.get('mu');
       if (['html', 'tailwind'].includes(p.get('stack'))) state.stack = p.get('stack');
+      const tint = p.get('tint');
+      if (tint) { const [th, ts] = tint.split(':'); state.tintOn = true; state.tintH = th === 'b' ? null : clamp(+th || 0, 0, 360); state.tintS = clamp(+ts || 0, 0, 20); }
+      else state.tintOn = false;
     }
   } catch (e) {}
 }
@@ -908,6 +949,9 @@ on('tintFromBrand', 'click', () => {
   else { state.h = state.bh; if (state.s < 3 || state.s > 10) state.s = 8; toast(`Gray hue set to ${state.h}°`); }
   state.source = ''; render();
 });
+on('tintOn', 'change', e => { state.tintOn = e.target.checked; render(); if (state.tintOn) toast(`Tint on: hue ${tintHue()}° at ${state.tintS}% on steps 2–12`); });
+on('tintH', 'input', e => { state.tintH = +e.target.value; render(); });
+on('tintS', 'input', e => { state.tintS = +e.target.value; render(); });
 on('lbAdj', 'input', e => { state.lbAdj = +e.target.value; render(); });
 [['lText2Seg', 'lText2'], ['lBorderSeg', 'lBorder'], ['lMutedSeg', 'lMuted']].forEach(([id, key]) =>
   on(id, 'click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; state[key] = b.dataset.v; render(); }));
