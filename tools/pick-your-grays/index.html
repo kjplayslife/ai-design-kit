@@ -713,7 +713,7 @@ function renderExamples() {
       <div class="head"><b>${esc(e.name)}</b><span class="xs muted">${esc(e.tint)}</span></div>
       ${d ? strip(d, ['page', 'card', 'border', 'secondaryText', 'text'], 'dark') + '<div class="k"><span>page</span><span>card</span><span>border</span><span>2nd text</span><span>text</span></div>' : '<div class="xs muted">dark mode not sampled</div>'}
       ${l ? strip(l, ['page', 'muted', 'border', 'secondaryText', 'text'], 'light') + '<div class="k"><span>page</span><span>muted</span><span>border</span><span>2nd text</span><span>text</span></div>' : '<div class="xs muted">light mode not sampled</div>'}
-      ${b ? `<div class="row" style="align-items:flex-start;gap:10px"><i class="bdot" style="background:${b.hex}"></i><div class="xs"><span class="mono">brand ${b.hex}</span> <span class="muted">· ${esc(b.note || '')}</span></div></div>` : ''}
+      ${b ? `<div class="row" style="align-items:flex-start;gap:10px"><i class="bdot" style="background:${b.hex}"></i><div class="xs" style="flex:1;min-width:0"><span class="mono">brand ${b.hex}</span> <span class="muted">· ${esc(b.note || '')}</span></div></div>` : ''}
       ${e.notes ? `<div class="xs muted">${esc(e.notes)}</div>` : ''}
       <div class="row" style="justify-content:space-between">
         <span class="xs mono muted">${d ? 'page' : 'text'} ${anchor} · H${h} S${s} L${li}${d ? ' · text on page ' + fmt(contrast(d.text, d.page)) : ''}</span>
