@@ -4,14 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pick Your Grays</title>
-<meta name="description" content="Start from a popular app's dark palette, dial in your gray and brand color for dark mode, then tune the light mode it generates. Exports a globals.css snippet.">
+<meta name="description" content="Pick one dark gray, generate a 12-step scale from it, add a brand color, and get light mode for free. Exports a globals.css snippet.">
 <style>
-  /* The page themes itself with the grays you pick. JS overwrites these on :root (dark half)
-     and on .light-zone (light half). */
   :root {
-    --bg: #09090b; --card: #18181b; --muted: #27272a; --border: #27272a;
-    --text: #fafafa; --text2: #a1a1aa; --disabled: #52525b;
-    --brand: #3b82f6; --brand-fg: #ffffff;
+    --bg: #111113; --card: #18191b; --muted: #212225; --hover: #272a2d; --border: #363a3f; --border2: #43484e;
+    --text: #edeef0; --text2: #b0b4ba; --solid: #696e77;
+    --brand: #2563eb; --brand-fg: #edeef0;
     --ok: #22c55e; --warn: #f59e0b; --bad: #ef4444;
     --shadow: none; --radius: 8px;
   }
@@ -39,7 +37,6 @@
   .grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
   @media (min-width: 800px) { .grid2 { grid-template-columns: 1fr 1fr; } }
 
-  /* the light half */
   .light-zone { background: var(--bg); color: var(--text); margin: 0 -24px; padding: 56px 24px 64px; border-top: 1px solid var(--border); display: grid; gap: 56px; }
   @media (max-width: 640px) { .light-zone { margin: 0 -16px; padding: 40px 16px 48px; gap: 40px; } }
   .light-zone > * { max-width: 1052px; margin-left: auto; margin-right: auto; width: 100%; }
@@ -48,40 +45,39 @@
   label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
   .field { display: grid; gap: 6px; }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  input[type="text"], select { height: 40px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font: inherit; font-size: 14px; width: 100%; }
+  input[type="text"], select { height: 40px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border2); background: var(--muted); color: var(--text); font: inherit; font-size: 14px; width: 100%; }
   select { cursor: pointer; }
   input[type="text"]:focus-visible, button:focus-visible, input[type="range"]:focus-visible, select:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  input[type="color"] { width: 40px; height: 40px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: none; cursor: pointer; }
+  input[type="color"] { width: 40px; height: 40px; padding: 0; border: 1px solid var(--border2); border-radius: 6px; background: none; cursor: pointer; }
   input[type="range"] { width: 100%; accent-color: var(--brand); }
+  /* gray sliders stay neutral so they don't tint your judgement */
+  input[type="range"].neutral { accent-color: #9a9a9a; }
   .range-head { display: flex; justify-content: space-between; font-size: 14px; }
   .range-head .val { font-variant-numeric: tabular-nums; color: var(--text2); }
   .hint { font-size: 12px; color: var(--text2); }
-  button { height: 40px; padding: 0 16px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
-  button:hover { background: var(--muted); }
+  button { height: 40px; padding: 0 16px; border-radius: 6px; border: 1px solid var(--border2); background: var(--muted); color: var(--text); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+  button:hover { background: var(--hover); }
   button.primary { background: var(--brand); color: var(--brand-fg); border-color: transparent; }
   button.primary:hover { filter: brightness(1.08); }
-  button[aria-pressed="true"] { background: var(--muted); border-color: var(--text2); }
+  button.link { border: 0; background: none; height: auto; padding: 0; font-size: 12px; color: var(--text2); text-decoration: underline; text-underline-offset: 3px; }
+  button.link:hover { background: none; color: var(--text); }
+  button[aria-pressed="true"] { background: var(--hover); border-color: var(--text2); }
   button.sm { height: 32px; padding: 0 12px; font-size: 13px; }
-  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-  .seg button { border: 0; border-radius: 0; height: auto; min-height: 36px; padding: 6px 12px; line-height: 1.2; }
-  .seg button + button { border-left: 1px solid var(--border); }
+  .seg { display: inline-flex; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; height: auto; min-height: 36px; padding: 6px 12px; line-height: 1.2; background: var(--card); }
+  .seg button + button { border-left: 1px solid var(--border2); }
   .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
 
-  /* gallery */
-  .gallery { display: grid; gap: 12px; grid-template-columns: 1fr; }
-  @media (min-width: 640px) { .gallery { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 960px) { .gallery { grid-template-columns: 1fr 1fr 1fr; } }
-  .pal { display: grid; gap: 10px; padding: 16px; cursor: pointer; text-align: left; height: auto; font-weight: 400; align-content: start; }
-  .pal[aria-pressed="true"] { border-color: var(--text); }
-  .pal .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .pal .head b { font-weight: 600; font-size: 15px; }
-  .pal .strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
-  .pal .strip i { display: block; height: 40px; border-radius: 4px; border: 1px solid var(--border); }
-  .pal .strip.s11 { grid-template-columns: repeat(11, 1fr); }
-  .pal .strip.s11 i { height: 28px; }
-  .pal .k { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; font-size: 10px; color: var(--text2); text-align: center; }
-  .pal .meta { font-size: 12px; color: var(--text2); }
-  .scales { display: grid; gap: 12px; }
+  /* step 1 gallery: name + one swatch */
+  .swatches { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 560px) { .swatches { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 900px) { .swatches { grid-template-columns: repeat(6, 1fr); } }
+  .sw-card { display: grid; gap: 8px; padding: 10px; height: auto; text-align: left; font-weight: 400; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); }
+  .sw-card:hover { background: var(--card); border-color: var(--border2); }
+  .sw-card[aria-pressed="true"] { border-color: var(--text); background: var(--card); }
+  .sw-card .big { height: 72px; border-radius: 6px; border: 1px solid var(--border); }
+  .sw-card b { font-weight: 600; font-size: 14px; display: block; }
+  .sw-card .meta { font-size: 11px; color: var(--text2); }
 
   /* anchor + checks */
   .anchor { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; }
@@ -93,16 +89,31 @@
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .pair .sw { height: 72px; border-radius: var(--radius); border: 1px solid var(--border); display: grid; place-items: center; font-size: 14px; font-weight: 500; }
 
-  /* scale */
-  .scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
-  .scale .st { display: grid; gap: 6px; text-align: center; }
-  .scale .sw { height: 56px; border-radius: 6px; border: 1px solid var(--border); }
-  .scale .lbl { font-size: 12px; font-weight: 500; }
-  .scale .hex { font-size: 11px; color: var(--text2); font-family: ui-monospace, Menlo, monospace; }
-  @media (max-width: 640px) { .scale { grid-template-columns: repeat(6, 1fr); } .scale .hex { display: none; } }
+  /* 12-step scale table */
+  .steps { display: grid; }
+  .steprow { display: grid; grid-template-columns: 32px 140px 92px 1fr 1.3fr; gap: 16px; align-items: center; padding: 14px 8px; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .steprow:hover { background: var(--card); }
+  .steprow[aria-expanded="true"] { background: var(--card); }
+  .steprow .num { color: var(--text2); font-variant-numeric: tabular-nums; }
+  .steprow .sw { height: 56px; border-radius: 6px; border: 1px solid var(--border2); }
+  .steprow .hex { color: var(--text2); }
+  .steprow b { font-weight: 600; }
+  .steprow .why { color: var(--text2); font-size: 15px; }
+  .steprow .edited { font-size: 11px; color: var(--warn); }
+  .stepedit { grid-column: 1 / -1; display: grid; gap: 8px; padding: 4px 8px 8px 48px; }
+  .stepedit .range-head { max-width: 420px; }
+  .stepedit input[type="range"] { max-width: 420px; }
+  @media (max-width: 720px) {
+    .steprow { grid-template-columns: 24px 80px 1fr; gap: 10px; }
+    .steprow .why { grid-column: 2 / -1; font-size: 13px; }
+    .steprow .hex { display: none; }
+    .stepedit { padding-left: 8px; }
+  }
   .gap-flags { display: flex; flex-wrap: wrap; gap: 8px; }
   .flag { font-size: 12px; padding: 4px 8px; border-radius: 999px; border: 1px solid var(--border); background: var(--muted); }
   .flag.bad { border-color: var(--bad); } .flag.warn { border-color: var(--warn); }
+  .strip12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; }
+  .strip12 i { display: block; height: 28px; border-radius: 4px; border: 1px solid var(--border); }
 
   /* tables */
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -123,6 +134,17 @@
   .pv .inp { height: 36px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 14px; }
   .pv .tag { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
 
+  /* light gallery */
+  .gallery { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .gallery { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 960px) { .gallery { grid-template-columns: 1fr 1fr 1fr; } }
+  .pal { display: grid; gap: 10px; padding: 16px; }
+  .pal .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .pal .head b { font-weight: 600; font-size: 15px; }
+  .pal .strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+  .pal .strip i { display: block; height: 40px; border-radius: 4px; border: 1px solid var(--border); }
+  .pal .k { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; font-size: 10px; color: var(--text2); text-align: center; }
+
   /* export */
   .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
   textarea { width: 100%; min-height: 320px; padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; resize: vertical; }
@@ -137,52 +159,38 @@
   <header>
     <div class="eyebrow">A one-decision guide</div>
     <h1>Pick Your Grays</h1>
-    <p class="muted" style="margin-top:8px">Nail down dark mode first: start from a palette you already like, dial in your gray, pick one brand color. Light mode is generated from it, and you tune it at the bottom. The page re-themes itself as you go.</p>
+    <p class="muted" style="margin-top:8px">Pick one dark gray. Everything else comes from it: a 12-step scale, the jobs each step does, and a light mode you tune at the bottom. The page re-themes itself as you go.</p>
   </header>
 
-  <!-- 1 · GALLERY -->
+  <!-- STEP 1 · BASE GRAY -->
   <section>
-    <div class="step"><span class="n">Step 1</span><h2>Start from a palette you like</h2></div>
-    <p class="muted">Dark-mode grays from popular apps, sampled from screenshots. Same five jobs every time: page, card, border, secondary text, main text. Nobody uses pure mid-gray. Click one to load its page color as your starting point.</p>
-    <div class="gallery" id="gallery"></div>
-    <h3 style="margin-top:8px">Full reference scales</h3>
-    <p class="muted small">The screenshots only show the steps each site happened to use. These have all eleven, 950 on the left through 50 on the right.</p>
-    <div class="scales" id="scales"></div>
-  </section>
+    <div class="step"><span class="n">Step 1</span><h2>Pick your dark gray</h2></div>
+    <p class="muted">This is your page background. Start from an app you like, then adjust. Rules: not black (3–8% lightness), a hint of hue at 3–10% saturation.</p>
+    <div class="swatches" id="swatches"></div>
 
-  <!-- 2 · GRAY -->
-  <section>
-    <div class="step"><span class="n">Step 2</span><h2>Dial in your dark gray</h2></div>
-    <p class="muted">This one color is your page background (the 950 step). The other ten steps come from it by changing only lightness. Six rules: not black, a hint of hue at 3–10% saturation, text is the 50 step (not white), eleven steps that all differ, brand is lighter on dark, light mode mirrors the jobs.</p>
-    <div class="grid2">
+    <div class="grid2" style="margin-top:8px">
       <div class="card" style="display:grid;gap:20px">
         <div class="field">
           <div class="range-head"><label for="hue" style="margin:0">Hue</label><span class="val" id="hueVal"></span></div>
-          <input type="range" id="hue" min="0" max="360" step="1" value="240">
-          <div class="hint">Cool (blue, indigo, violet) → 220–250. Neutral → 240 at very low saturation. Warm (green, orange, amber, brown) → 20–40. Or press “Match gray hue to brand” after Step 3.</div>
+          <input type="range" class="neutral" id="hue" min="0" max="360" step="1" value="240">
+          <div class="hint">Cool → 220–250. Neutral → 240 at very low saturation. Warm → 20–40. You can match it to your brand in Step 3.</div>
         </div>
         <div class="field">
           <div class="range-head"><label for="sat" style="margin:0">Saturation</label><span class="val" id="satVal"></span></div>
-          <input type="range" id="sat" min="0" max="50" step="1" value="10">
-          <div class="hint">3–10% reads as gray. Above about 12% you can name the color, and it's too much. Every step keeps this value, so judge it by the 500 swatch, not the dark anchor.</div>
+          <input type="range" class="neutral" id="sat" min="0" max="50" step="1" value="8">
+          <div class="hint">3–10% reads as gray. Above about 12% you can name the color, and it's too much. Judge it by the middle of the scale below, not this dark swatch.</div>
         </div>
         <div class="field">
-          <div class="range-head"><label for="light" style="margin:0">Lightness (page, 950)</label><span class="val" id="lightVal"></span></div>
-          <input type="range" id="light" min="0" max="14" step="1" value="4">
-          <div class="hint">Rule 1: not black. 3–8%. 0% is #000 and makes everything float. 10–14% is “lifted” like Lovable and Discord.</div>
+          <div class="range-head"><label for="light" style="margin:0">Lightness</label><span class="val" id="lightVal"></span></div>
+          <input type="range" class="neutral" id="light" min="0" max="14" step="1" value="7">
+          <div class="hint">Not black. 3–8%. 0% is #000 and makes everything float. 10–14% is “lifted”, like Lovable and Discord.</div>
         </div>
-        <div class="field">
-          <div class="range-head"><label for="textL" style="margin:0">Lightness (text, 50)</label><span class="val" id="textLVal"></span></div>
-          <input type="range" id="textL" min="90" max="100" step="1" value="98">
-          <div class="hint">Rule 3: not pure white. 96–99%. This is your main text on dark and your muted fills on light.</div>
-        </div>
-        <label class="row small" style="margin:0;font-weight:400"><input type="checkbox" id="boost"> Add +3 saturation to the dark steps (950–700) so they don't go muddy</label>
       </div>
       <div class="card" style="display:grid;gap:20px;align-content:start">
         <div class="anchor">
           <div class="sw" id="anchorSw"></div>
           <div class="field">
-            <label for="anchorHex">My dark background (950)</label>
+            <label for="anchorHex">My dark gray</label>
             <input type="text" id="anchorHex" class="mono" spellcheck="false" aria-describedby="anchorHsl">
             <div class="hint mono" id="anchorHsl"></div>
           </div>
@@ -195,10 +203,23 @@
     </div>
   </section>
 
-  <!-- 3 · BRAND -->
+  <!-- STEP 2 · 12-STEP SCALE -->
+  <section>
+    <div class="step"><span class="n">Step 2</span><h2>Your 12-step dark scale</h2></div>
+    <p class="muted">Generated from your gray. Same hue and saturation on every step, only lightness changes. Lighter = closer to you. Each step has one job. Click a step to nudge its lightness.</p>
+    <div class="card" style="padding:8px 16px 16px">
+      <div class="steps" id="steps"></div>
+      <div class="row" style="justify-content:space-between;margin-top:12px">
+        <div class="gap-flags" id="neighbor"></div>
+        <button type="button" class="link" id="resetSteps">Reset all steps</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 3 · BRAND -->
   <section>
     <div class="step"><span class="n">Step 3</span><h2>Pick your brand color</h2></div>
-    <p class="muted">One color, for buttons, links, and the one thing on each screen that matters most. You're picking how it looks on dark. The light-mode version is derived (a bit darker so white text passes) and you can nudge it at the bottom.</p>
+    <p class="muted">One color, for buttons, links, and the one thing on each screen that matters most. You're picking how it looks on dark. Light mode derives a darker version and you can nudge it at the bottom.</p>
     <div class="grid2">
       <div class="card" style="display:grid;gap:20px">
         <div class="field">
@@ -213,25 +234,25 @@
         </div>
         <div class="field">
           <div class="range-head"><label for="bs" style="margin:0">Saturation</label><span class="val" id="bsVal"></span></div>
-          <input type="range" id="bs" min="0" max="100" step="1" value="70">
+          <input type="range" id="bs" min="0" max="100" step="1" value="83">
           <div class="hint">Brand colors are 60–95% saturated. Under about 25% it becomes a neutral brand: a white button on dark, a black button on light.</div>
         </div>
         <div class="field">
           <div class="range-head"><label for="bl" style="margin:0">Lightness</label><span class="val" id="blVal"></span></div>
-          <input type="range" id="bl" min="0" max="100" step="1" value="60">
+          <input type="range" id="bl" min="0" max="100" step="1" value="53">
           <div class="hint">On dark, 50–65% pops without going neon. Pull saturation back a little if it glows.</div>
         </div>
         <div class="row">
           <button type="button" id="tintFromBrand">Match gray hue to brand</button>
-          <span class="hint">Rule 2: the gray keeps your brand hue at 3–10% saturation.</span>
+          <span class="hint">Sets the Step 1 hue to this hue, at 3–10% saturation.</span>
         </div>
       </div>
       <div class="card" style="display:grid;gap:20px;align-content:start">
         <div class="field">
           <label for="brandHex">My brand color (dark mode)</label>
           <div class="row">
-            <input type="color" id="brandColor" value="#5b8cf0" aria-label="Brand color picker">
-            <input type="text" id="brandHex" value="#5b8cf0" class="mono" style="width:130px" spellcheck="false">
+            <input type="color" id="brandColor" value="#2563eb" aria-label="Brand color picker">
+            <input type="text" id="brandHex" value="#2563eb" class="mono" style="width:130px" spellcheck="false">
             <span class="hint mono" id="brandHsl"></span>
           </div>
         </div>
@@ -244,20 +265,10 @@
     </div>
   </section>
 
-  <!-- 4 · SCALE -->
+  <!-- STEP 4 · DARK MODE -->
   <section>
-    <div class="step"><span class="n">Step 4</span><h2>Your scale</h2></div>
-    <p class="muted">Eleven steps from your gray, same hue and saturation, lightness from the ladder 5 · 10 · 16 · 25 · 33 · 46 · 64 · 83 · 90 · 96 · 98. The steps bunch up at the light end on purpose: the eye can tell light grays apart and you need many for backgrounds and borders.</p>
-    <div class="card" style="display:grid;gap:16px">
-      <div class="scale" id="scale"></div>
-      <div class="gap-flags" id="neighbor"></div>
-    </div>
-  </section>
-
-  <!-- 5 · DARK MODE -->
-  <section>
-    <div class="step"><span class="n">Step 5</span><h2>Dark mode, checked</h2></div>
-    <p class="muted">Six of the eleven steps get a job. Lighter means closer to the viewer, so cards are one step up from the page and there are no shadows. Six contrast pairs; text needs 4.5:1.</p>
+    <div class="step"><span class="n">Step 4</span><h2>Dark mode, checked</h2></div>
+    <p class="muted">Six contrast pairs; text needs 4.5:1. Cards are one step up from the page and there are no shadows.</p>
     <div class="grid2">
       <div class="card">
         <h3 style="margin-bottom:12px">Jobs</h3>
@@ -271,11 +282,12 @@
     <div id="previewDark"></div>
   </section>
 
-  <!-- 6 · LIGHT MODE ZONE -->
+  <!-- STEP 5 · LIGHT MODE ZONE -->
   <div class="light-zone" id="lightZone">
     <section>
-      <div class="step"><span class="n">Step 6</span><h2>Light mode, generated</h2></div>
-      <p class="muted">Light mode mirrors the jobs, not the hexes. White page, white cards with a border and a small shadow, your 950 step as text, your brand a bit darker so white text passes. Everything here comes from what you picked above. Tune only what looks off.</p>
+      <div class="step"><span class="n">Step 5</span><h2>Light mode, generated</h2></div>
+      <p class="muted">A 12-step light scale from the same hue and saturation, with the jobs mirrored: near-white page, white cards with a border and a small shadow, your brand a bit darker so white text passes. Tune only what looks off.</p>
+      <div class="card" style="padding:16px"><div class="strip12" id="lightStrip"></div><div class="xs muted" style="margin-top:8px">Light scale, steps 1–12. Step 1 is the page, 12 is text.</div></div>
       <div class="grid2">
         <div class="card" style="display:grid;gap:20px">
           <div class="field">
@@ -285,18 +297,18 @@
           </div>
           <div class="field">
             <label>Secondary text</label>
-            <div class="seg" id="lText2Seg"><button type="button" data-v="500">500</button><button type="button" data-v="600">600</button></div>
-            <div class="hint">500 passes 4.5:1 on white. 400 fails. Use 600 if you set helper text inside muted fills a lot.</div>
+            <div class="seg" id="lText2Seg"><button type="button" data-v="11">Step 11</button><button type="button" data-v="10">Step 10</button></div>
+            <div class="hint">11 is the low-contrast text step. 10 is lighter; use it only for captions that sit next to strong text.</div>
           </div>
           <div class="field">
             <label>Borders</label>
-            <div class="seg" id="lBorderSeg"><button type="button" data-v="200">200</button><button type="button" data-v="300">300</button></div>
-            <div class="hint">200 is two steps off white and reads as a line. 300 if your cards need to hold their edge on busy pages.</div>
+            <div class="seg" id="lBorderSeg"><button type="button" data-v="6">Step 6</button><button type="button" data-v="7">Step 7</button></div>
+            <div class="hint">6 is the subtle border. 7 if cards need to hold their edge on busy pages.</div>
           </div>
           <div class="field">
             <label>Muted fills</label>
-            <div class="seg" id="lMutedSeg"><button type="button" data-v="100">100</button><button type="button" data-v="50">50</button></div>
-            <div class="hint">100 is one step off white. 50 is barely there; use it when 100 looks dirty.</div>
+            <div class="seg" id="lMutedSeg"><button type="button" data-v="3">Step 3</button><button type="button" data-v="2">Step 2</button></div>
+            <div class="hint">3 is the normal fill for inputs and rows. 2 is barely there.</div>
           </div>
         </div>
         <div class="card" style="display:grid;gap:20px;align-content:start">
@@ -347,13 +359,13 @@
   </section>
 
   <footer>
-    The six rules: 1. Background is dark gray, not black. 2. Tint it toward your brand hue, 3–10% saturation. 3. Text is the 50 step, not white. 4. Build 11 steps by changing only lightness; pass the neighbor test. 5. Brand is lighter on dark, darker on light. 6. Light mode mirrors the jobs, not the hex values.
+    Rules: background is dark gray, not black · tint it toward your brand hue at 3–10% saturation · text is the lightest step, not white · one job per step · brand is lighter on dark, darker on light · light mode mirrors the jobs, not the hex values.
     &nbsp;·&nbsp; <a href="RULES.md">Rules</a> &nbsp;·&nbsp; <a href="PROMPT.md">Prompt</a> &nbsp;·&nbsp; <a href="Pick-Your-Grays.pdf">PDF</a>
   </footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="examples/examples.js?v=3"></script>
+<script src="examples/examples.js?v=4"></script>
 <script>
 /* ---------- color math ---------- */
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
@@ -388,67 +400,89 @@ function lum(hex) {
   const c = hexToRgb(hex).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 }
-function contrast(a, b) { const l1 = lum(a), l2 = lum(b); const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1]; return (hi + 0.05) / (lo + 0.05); }
+function contrast(a, b) { const l1 = lum(a), l2 = lum(b); const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1]; return Math.round((hi + 0.05) / (lo + 0.05) * 10) / 10; }
 const fmt = r => (Math.round(r * 10) / 10).toFixed(1) + ':1';
 
 /* ---------- data ---------- */
-const STEPS = [950, 900, 800, 700, 600, 500, 400, 300, 200, 100, 50];
-const LADDER = [5, 10, 16, 25, 33, 46, 64, 83, 90, 96, 98];
 const EXAMPLES = window.GRAY_EXAMPLES || [];
-const SCALES = window.GRAY_SCALES || [];
+// Lightness offsets from the base gray, Radix-style (Slate Dark: 7,10,14,17,19,23,28,38,44,49,71,94 with base 7).
+const DARK_OFFSETS = [0, 3, 7, 10, 12, 16, 21, 31, 37, 42, 64, 87];
+// Light scale lightness, Radix Slate light: 99,98,95,92,89,86,82,75,57,53,40,13. Step 12 uses your dark gray.
+const LIGHT_L = [99, 98, 95, 92, 89, 86, 82, 75, 57, 53, 40, null];
+const JOBS12 = [
+  ['App background', 'The page itself'],
+  ['Subtle background', 'Cards, sidebar, header, code blocks'],
+  ['UI element background', 'Buttons, inputs, list rows (normal)'],
+  ['Hovered UI background', 'Same things when hovered'],
+  ['Active / selected background', 'Pressed or selected state'],
+  ['Subtle border', 'Dividers, separators, card edges'],
+  ['UI element border', 'Input and button borders'],
+  ['Hovered border / focus ring', 'Borders on hover, focus outline'],
+  ['Solid background', 'Solid buttons, badges, scrollbar thumb'],
+  ['Hovered solid', 'Solid button on hover'],
+  ['Low-contrast text', 'Labels, captions, placeholders'],
+  ['High-contrast text', 'Headings, body text'],
+];
 
 /* ---------- state ---------- */
 const state = {
-  h: 240, s: 10, l: 4, textL: 98, boost: false,
-  bh: 221, bs: 70, bl: 60, brandExact: '#5b8cf0', brand: '#5b8cf0',
-  lbAdj: 0, lText2: '500', lBorder: '200', lMuted: '100',
-  source: '', tab: 'css',
+  h: 240, s: 8, l: 7, ov: {},            // ov: per-step lightness overrides, index -> L
+  bh: 221, bs: 83, bl: 53, brandExact: '#2563eb', brand: '#2563eb',
+  lbAdj: 0, lText2: '11', lBorder: '6', lMuted: '3',
+  source: '', open: null, tab: 'css',
 };
 
-function buildScale() {
-  const L = [...LADDER];
-  L[0] = state.l;
-  for (let i = 1; i < L.length; i++) L[i] = Math.max(L[i], L[i - 1] + (i < 7 ? 4 : 2));
-  L[10] = state.textL;
-  for (let i = 9; i >= 0; i--) L[i] = Math.min(L[i], L[i + 1] - 2);
-  return STEPS.map((step, i) => {
-    const s = state.boost && i <= 3 ? clamp(state.s + 3, 0, 100) : state.s;
-    const l = clamp(L[i], 0, 100);
-    return { step, l, s, hex: hsl(state.h, s, l) };
+function buildDark() {
+  return DARK_OFFSETS.map((off, i) => {
+    const base = i === 0 ? state.l : clamp(state.l + off, 0, 98);
+    const l = state.ov[i] != null ? state.ov[i] : base;
+    return { n: i + 1, l, base, edited: state.ov[i] != null, hex: hsl(state.h, state.s, l) };
   });
 }
-const byStep = scale => Object.fromEntries(scale.map(x => [x.step, x.hex]));
+function buildLight(dark) {
+  return LIGHT_L.map((l, i) => {
+    const L = l == null ? dark[0].l + 6 : l;
+    return { n: i + 1, l: L, hex: hsl(state.h, state.s, L) };
+  });
+}
 const isNeutralBrand = () => state.bs < 25;
 
-function jobs(g) {
-  const dark = { hex: state.brand, fg: g[50], step: '500' };
-  let light;
+function jobs(D, Lt) {
+  const d = i => D[i - 1].hex, l = i => Lt[i - 1].hex;
+  const darkBrand = { hex: state.brand, fg: d(12), step: 'brand' };
+  let lightBrand;
   if (isNeutralBrand()) {
-    dark.hex = g[50]; dark.fg = g[950]; dark.step = '50';
-    light = { hex: g[950], fg: '#ffffff', step: '950' };
+    darkBrand.hex = d(12); darkBrand.fg = d(1); darkBrand.step = '12';
+    lightBrand = { hex: l(12), fg: '#ffffff', step: '12' };
   } else {
-    light = { hex: hsl(state.bh, clamp(Math.round(state.bs * 1.1), 0, 100), clamp(state.bl - 8 + state.lbAdj, 8, 92)), fg: '#ffffff', step: '600' };
+    lightBrand = { hex: hsl(state.bh, clamp(Math.round(state.bs * 1.1), 0, 100), clamp(state.bl - 8 + state.lbAdj, 8, 92)), fg: '#ffffff', step: 'brand' };
   }
   return {
     dark: {
-      page: { step: 950, hex: g[950], why: 'The base. Not black.' },
-      card: { step: 900, hex: g[900], why: 'One step lighter = on top.' },
-      muted: { step: 800, hex: g[800], why: 'Two steps up. Hover, input.' },
-      border: { step: 800, hex: g[800], why: 'Same as muted. Just visible.' },
-      disabled: { step: 600, hex: g[600], why: 'Readable but clearly off.' },
-      text2: { step: 400, hex: g[400], why: 'Passes 4.5:1 on 950. 500 does not.' },
-      text: { step: 50, hex: g[50], why: 'Your white.' },
-      brand: { ...dark, why: isNeutralBrand() ? 'Neutral brand: a white button on dark.' : 'Your pick. Text on it is the 50 step.' },
+      page: { step: 1, hex: d(1), why: 'App background.' },
+      card: { step: 2, hex: d(2), why: 'Subtle background. One step up = on top.' },
+      muted: { step: 3, hex: d(3), why: 'UI element background: inputs, rows.' },
+      hover: { step: 4, hex: d(4), why: 'Hovered UI background.' },
+      border: { step: 6, hex: d(6), why: 'Subtle border.' },
+      border2: { step: 7, hex: d(7), why: 'UI element border.' },
+      ring: { step: 8, hex: d(8), why: 'Focus ring, hovered border.' },
+      solid: { step: 9, hex: d(9), why: 'Solid gray fills.' },
+      text2: { step: 11, hex: d(11), why: 'Low-contrast text.' },
+      text: { step: 12, hex: d(12), why: 'High-contrast text.' },
+      brand: { ...darkBrand, why: isNeutralBrand() ? 'Neutral brand: a light button on dark.' : 'Your pick. Text on it is step 12.' },
     },
     light: {
-      page: { step: 'white', hex: '#ffffff', why: 'Pure white is fine for the page.' },
-      card: { step: 'white', hex: '#ffffff', why: 'Same as page. Depth from border + shadow.' },
-      muted: { step: +state.lMuted, hex: g[state.lMuted], why: 'Off white.' },
-      border: { step: +state.lBorder, hex: g[state.lBorder], why: 'Off white, visible as a line.' },
-      disabled: { step: 400, hex: g[400], why: '' },
-      text2: { step: +state.lText2, hex: g[state.lText2], why: '500 passes on white. 400 fails.' },
-      text: { step: 950, hex: g[950], why: 'Your black. Not #000.' },
-      brand: { ...light, why: isNeutralBrand() ? 'Neutral brand: a black button on light.' : 'Darker than on dark so white text passes.' },
+      page: { step: 1, hex: l(1), why: 'Near-white page.' },
+      card: { step: 'white', hex: '#ffffff', why: 'White, lighter than the page. Depth from border + shadow.' },
+      muted: { step: +state.lMuted, hex: l(+state.lMuted), why: 'UI element background.' },
+      hover: { step: 4, hex: l(4), why: 'Hovered UI background.' },
+      border: { step: +state.lBorder, hex: l(+state.lBorder), why: 'Border, visible as a line.' },
+      border2: { step: 7, hex: l(7), why: 'UI element border.' },
+      ring: { step: 8, hex: l(8), why: 'Focus ring, hovered border.' },
+      solid: { step: 9, hex: l(9), why: 'Solid gray fills.' },
+      text2: { step: +state.lText2, hex: l(+state.lText2), why: 'Low-contrast text.' },
+      text: { step: 12, hex: l(12), why: 'Your dark gray, a touch lighter. Not #000.' },
+      brand: { ...lightBrand, why: isNeutralBrand() ? 'Neutral brand: a dark button on light.' : 'Darker than on dark so white text passes.' },
     },
   };
 }
@@ -458,20 +492,20 @@ function contrastRows(j) {
   const mk = r => ({ ...r, ratio: contrast(r.fg, r.bg) });
   return {
     dark: [
-      { name: 'Main text (50) on page (950)', fg: d.text.hex, bg: d.page.hex, need: 4.5, tip: 'Lower the page lightness.' },
-      { name: 'Main text (50) on card (900)', fg: d.text.hex, bg: d.card.hex, need: 4.5, tip: 'Lower the page lightness so 900 comes down too.' },
-      { name: 'Secondary text (400) on page (950)', fg: d.text2.hex, bg: d.page.hex, need: 4.5, tip: 'Lower the page lightness, or use 300 for secondary text.' },
-      { name: 'Secondary text (400) on card (900)', fg: d.text2.hex, bg: d.card.hex, need: 4.5, tip: 'Use 300 for secondary text on cards.' },
-      { name: 'Border (800) on page (950)', fg: d.border.hex, bg: d.page.hex, need: 1.2, deco: true, tip: 'Use 700 for borders.' },
-      { name: `Text on brand (${d.brand.step})`, fg: d.brand.fg, bg: d.brand.hex, need: 4.5, tip: 'Lower the brand lightness, or keep labels short and bold.' },
+      { name: 'Text (12) on page (1)', fg: d.text.hex, bg: d.page.hex, need: 4.5, tip: 'Lower the page lightness.' },
+      { name: 'Text (12) on card (2)', fg: d.text.hex, bg: d.card.hex, need: 4.5, tip: 'Lower the page lightness so step 2 comes down too.' },
+      { name: 'Secondary text (11) on page (1)', fg: d.text2.hex, bg: d.page.hex, need: 4.5, tip: 'Click step 11 and raise its lightness.' },
+      { name: 'Secondary text (11) on card (2)', fg: d.text2.hex, bg: d.card.hex, need: 4.5, tip: 'Click step 11 and raise its lightness.' },
+      { name: 'Border (6) on page (1)', fg: d.border.hex, bg: d.page.hex, need: 1.2, deco: true, tip: 'Click step 6 and raise its lightness.' },
+      { name: 'Text on brand', fg: d.brand.fg, bg: d.brand.hex, need: 4.5, tip: 'Lower the brand lightness, or keep labels short and bold.' },
     ].map(mk),
     light: [
-      { name: 'Main text (950) on white', fg: l.text.hex, bg: l.page.hex, need: 4.5, tip: '' },
-      { name: `Secondary text (${l.text2.step}) on white`, fg: l.text2.hex, bg: l.page.hex, need: 4.5, tip: 'Switch secondary text to 600.' },
-      { name: `Secondary text (${l.text2.step}) on muted (${l.muted.step})`, fg: l.text2.hex, bg: l.muted.hex, need: 4.5, tip: 'Switch secondary text to 600, or muted to 50.' },
-      { name: `Main text (950) on muted (${l.muted.step})`, fg: l.text.hex, bg: l.muted.hex, need: 4.5, tip: '' },
-      { name: `Border (${l.border.step}) on white`, fg: l.border.hex, bg: l.page.hex, need: 1.2, deco: true, tip: 'Switch borders to 300.' },
-      { name: `White on brand (${l.brand.step})`, fg: l.brand.fg, bg: l.brand.hex, need: 4.5, tip: 'Slide the light brand darker.' },
+      { name: 'Text (12) on page (1)', fg: l.text.hex, bg: l.page.hex, need: 4.5, tip: '' },
+      { name: `Secondary text (${l.text2.step}) on page (1)`, fg: l.text2.hex, bg: l.page.hex, need: 4.5, tip: 'Switch secondary text to step 11.' },
+      { name: `Secondary text (${l.text2.step}) on muted (${l.muted.step})`, fg: l.text2.hex, bg: l.muted.hex, need: 4.5, tip: 'Switch secondary text to step 11, or muted to step 2.' },
+      { name: `Text (12) on muted (${l.muted.step})`, fg: l.text.hex, bg: l.muted.hex, need: 4.5, tip: '' },
+      { name: `Border (${l.border.step}) on page (1)`, fg: l.border.hex, bg: l.page.hex, need: 1.2, deco: true, tip: 'Switch borders to step 7.' },
+      { name: 'White on brand', fg: l.brand.fg, bg: l.brand.hex, need: 4.5, tip: 'Slide the light brand darker.' },
     ].map(mk),
   };
 }
@@ -481,36 +515,22 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const dotLi = i => `<li><span class="dot ${i.cls}">${i.cls === 'ok' ? '✓' : i.cls === 'warn' ? '!' : '✕'}</span><span>${esc(i.text)}</span></li>`;
 
-function renderGallery() {
-  const strip = (o, keys) => `<div class="strip">${keys.map(k => `<i style="background:${o[k]}" title="${k} ${o[k]}"></i>`).join('')}</div>`;
-  $('gallery').innerHTML = EXAMPLES.map((e, i) => {
+function renderStatic() {
+  $('swatches').innerHTML = EXAMPLES.map((e, i) => {
     if (!e.dark) return '';
-    const d = e.dark; const [h, s, l] = rgbToHsl(hexToRgb(d.page));
-    return `<button type="button" class="card pal" data-gallery="${i}" aria-pressed="${state.source === 'ex:' + i}">
-      <div class="head"><b>${esc(e.name)}</b><span class="xs muted">${esc(e.tint)}</span></div>
-      ${strip(d, ['page', 'card', 'border', 'secondaryText', 'text'])}
-      <div class="k"><span>page</span><span>card</span><span>border</span><span>2nd text</span><span>text</span></div>
-      <div class="meta mono">page ${d.page} · H${h} S${s} L${l} · text ${fmt(contrast(d.text, d.page))}</div>
-      ${e.notes ? `<div class="meta">${esc(e.notes)}</div>` : ''}
-    </button>`;
-  }).join('');
-  $('scales').innerHTML = SCALES.map((sc, i) => {
-    const [h, s, l] = rgbToHsl(hexToRgb(sc.anchor));
-    return `<button type="button" class="card pal" data-scale="${i}" aria-pressed="${state.source === 'sc:' + i}">
-      <div class="head"><b>${esc(sc.name)}</b><span class="xs muted">${esc(sc.tint)}</span></div>
-      <div class="strip s11">${sc.steps.map((x, k) => `<i style="background:${x}" title="${STEPS[k]} ${x}"></i>`).join('')}</div>
-      <div class="meta mono">${sc.steps.join(' ')}</div>
-      <div class="meta">Loads ${sc.anchor} (H${h} S${s} L${l}) as your page.</div>
+    const [h, s, l] = rgbToHsl(hexToRgb(e.dark.page));
+    return `<button type="button" class="sw-card" data-sw="${i}" aria-pressed="false">
+      <div class="big" style="background:${e.dark.page}"></div>
+      <div><b>${esc(e.name)}</b><span class="meta mono">${e.dark.page} · H${h} S${s} L${l}</span></div>
     </button>`;
   }).join('');
   $('galleryLight').innerHTML = EXAMPLES.map(e => {
     if (!e.light) return '';
     const l = e.light;
-    return `<div class="card pal" style="cursor:default">
+    return `<div class="card pal">
       <div class="head"><b>${esc(e.name)}</b><span class="xs muted">${esc(e.tint)}</span></div>
-      ${strip(l, ['page', 'muted', 'border', 'secondaryText', 'text'])}
+      <div class="strip">${['page', 'muted', 'border', 'secondaryText', 'text'].map(k => `<i style="background:${l[k]}" title="${k} ${l[k]}"></i>`).join('')}</div>
       <div class="k"><span>page</span><span>muted</span><span>border</span><span>2nd text</span><span>text</span></div>
-      <div class="meta mono">2nd text on page ${fmt(contrast(l.secondaryText, l.page))}</div>
     </div>`;
   }).join('');
   $('brandPick').innerHTML = '<option value="">Choose one…</option>' + EXAMPLES.map((e, i) => e.brand ? `<option value="${i}">${esc(e.name)} · ${e.brand.hex}</option>` : '').join('');
@@ -520,12 +540,11 @@ function renderControls() {
   $('hue').value = state.h; $('hueVal').textContent = state.h + '°';
   $('sat').value = state.s; $('satVal').textContent = state.s + '%';
   $('light').value = state.l; $('lightVal').textContent = state.l + '%';
-  $('textL').value = state.textL; $('textLVal').textContent = state.textL + '%';
-  $('boost').checked = state.boost;
   const anchor = hsl(state.h, state.s, state.l);
   $('anchorSw').style.background = anchor;
   if (document.activeElement !== $('anchorHex')) $('anchorHex').value = anchor;
   $('anchorHsl').textContent = `H ${state.h}  S ${state.s}%  L ${state.l}%`;
+  document.querySelectorAll('#swatches .sw-card').forEach(b => b.setAttribute('aria-pressed', state.source === 'ex:' + b.dataset.sw));
 
   if (document.activeElement !== $('brandHex')) $('brandHex').value = state.brand;
   $('brandColor').value = state.brand;
@@ -538,46 +557,68 @@ function renderControls() {
   [['lText2Seg', 'lText2'], ['lBorderSeg', 'lBorder'], ['lMutedSeg', 'lMuted']].forEach(([id, key]) =>
     document.querySelectorAll('#' + id + ' button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state[key])));
   document.querySelectorAll('#exportTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === state.tab));
-  document.querySelectorAll('#gallery .pal').forEach(b => b.setAttribute('aria-pressed', state.source === 'ex:' + b.dataset.gallery));
-  document.querySelectorAll('#scales .pal').forEach(b => b.setAttribute('aria-pressed', state.source === 'sc:' + b.dataset.scale));
 }
 
-function renderRuleChecks(g) {
-  const items = [];
-  const pick = (cls, text) => items.push({ cls, text });
-  if (state.l === 0) pick('bad', 'Rule 1 · That is #000. Everything on top will look like it floats. Raise lightness to 3–8%.');
-  else if (state.l < 3) pick('warn', `Rule 1 · Lightness ${state.l}% is almost black. 3–8% is the safe zone.`);
-  else if (state.l > 8) pick('warn', `Rule 1 · Lightness ${state.l}% is lifted, like Lovable or Discord. It works, but it feels softer and cards get less depth.`);
-  else pick('ok', `Rule 1 · Not black. Lightness ${state.l}% is in the 3–8% zone.`);
-  if (state.s > 12) pick('bad', `Rule 2 · Saturation ${state.s}% reads as a color in the mid steps (look at the 500 swatch). Drop to 3–10%.`);
-  else if (state.s > 10) pick('warn', `Rule 2 · Saturation ${state.s}% is at the edge. Squint at the 500 swatch: can you name the color? Then drop it.`);
-  else if (state.s < 3) pick('warn', `Rule 2 · Saturation ${state.s}% is a pure gray. Fine, but a 3–10% tint toward your brand hue feels more intentional.`);
-  else pick('ok', `Rule 2 · A hint of hue ${state.h}° at ${state.s}% saturation. Reads as gray.`);
-  if (state.textL === 100) pick('bad', 'Rule 3 · Text is #fff. White glows on dark. Drop text lightness to 96–99%.');
-  else if (state.textL < 96) pick('warn', `Rule 3 · Text lightness ${state.textL}% is a bit dim for main text. 96–99% is the zone.`);
-  else pick('ok', `Rule 3 · Main text is ${g[50]}, not #fff.`);
+function renderRuleChecks(D) {
+  const items = []; const pick = (cls, text) => items.push({ cls, text });
+  if (state.l === 0) pick('bad', 'That is #000. Everything on top will look like it floats. Raise lightness to 3–8%.');
+  else if (state.l < 3) pick('warn', `Lightness ${state.l}% is almost black. 3–8% is the safe zone.`);
+  else if (state.l > 8) pick('warn', `Lightness ${state.l}% is lifted, like Lovable or Discord. It works, but it feels softer and cards get less depth.`);
+  else pick('ok', `Not black. Lightness ${state.l}% is in the 3–8% zone.`);
+  if (state.s > 12) pick('bad', `Saturation ${state.s}% reads as a color in the middle of the scale. Drop to 3–10%.`);
+  else if (state.s > 10) pick('warn', `Saturation ${state.s}% is at the edge. Squint at steps 8–10 below: can you name the color? Then drop it.`);
+  else if (state.s < 3) pick('warn', `Saturation ${state.s}% is a pure gray. Fine, but a 3–10% tint toward your brand hue feels more intentional.`);
+  else pick('ok', `A hint of hue ${state.h}° at ${state.s}% saturation. Reads as gray.`);
+  pick('ok', `Text will be step 12, ${D[11].hex}, not #fff.`);
   if (!isNeutralBrand()) {
     let diff = Math.abs(state.bh - state.h); diff = Math.min(diff, 360 - diff);
     if (diff <= 40 || state.s < 3) pick('ok', `Gray hue ${state.h}° matches your brand hue ${state.bh}°.`);
-    else pick('warn', `Brand hue is ${state.bh}° but the gray hue is ${state.h}°. Press “Match gray hue to brand” unless the contrast is on purpose.`);
-  } else pick('ok', 'Neutral brand. A neutral gray (hue 240, low saturation) fits.');
+    else pick('warn', `Brand hue is ${state.bh}° but the gray hue is ${state.h}°. Press “Match gray hue to brand” in Step 3 unless the contrast is on purpose.`);
+  }
   $('ruleChecks').innerHTML = items.map(dotLi).join('');
 }
 
-function renderBrand(j, g) {
-  const d = j.dark.brand;
+function renderSteps(D) {
+  $('steps').innerHTML = D.map((x, i) => {
+    const [job, why] = JOBS12[i];
+    const open = state.open === i;
+    return `<div class="steprow" data-step="${i}" role="button" tabindex="0" aria-expanded="${open}">
+      <span class="num">${x.n}</span>
+      <div class="sw" style="background:${x.hex}"></div>
+      <span class="hex mono">${x.hex}</span>
+      <div><b>${job}</b>${x.edited ? `<div class="edited">nudged · was L ${x.base}</div>` : ''}</div>
+      <span class="why">${why}</span>
+      ${open ? `<div class="stepedit" data-stop="1">
+        <div class="range-head"><label for="ov${i}" style="margin:0">Lightness of step ${x.n}</label><span class="val">${x.l}%</span></div>
+        <input type="range" class="neutral" id="ov${i}" data-ov="${i}" min="0" max="100" step="1" value="${x.l}">
+        <div class="row"><span class="hint">Hue and saturation stay locked to your gray. Generated value is L ${x.base}.</span>${x.edited ? `<button type="button" class="link" data-reset="${i}">Reset this step</button>` : ''}</div>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  const flags = [];
+  for (let i = 0; i < D.length - 1; i++) {
+    const dl = D[i + 1].l - D[i].l;
+    if (dl <= 0) flags.push(`<span class="flag bad">Step ${D[i + 1].n} is not lighter than step ${D[i].n}</span>`);
+    else if (dl < 2) flags.push(`<span class="flag warn">Steps ${D[i].n} and ${D[i + 1].n} look the same (ΔL ${dl})</span>`);
+  }
+  $('neighbor').innerHTML = flags.length ? flags.join('') : '<span class="flag">Neighbor test passed: every step is lighter than the last.</span>';
+  $('resetSteps').style.visibility = Object.keys(state.ov).length ? 'visible' : 'hidden';
+}
+
+function renderBrand(j, D) {
+  const d = j.dark.brand, page = D[0].hex, border = D[5].hex;
   $('brandPair').innerHTML = `
-    <div><div class="sw" style="background:${d.hex};color:${d.fg}">Button · ${d.step}</div><div class="xs mono muted" style="margin-top:6px">${d.hex} on page ${g[950]}</div></div>
-    <div><div class="sw" style="background:${g[950]};color:${d.hex};border-color:${g[800]}">Link text</div><div class="xs mono muted" style="margin-top:6px">${d.hex} as text on ${g[950]}</div></div>`;
+    <div><div class="sw" style="background:${d.hex};color:${d.fg}">Button</div><div class="xs mono muted" style="margin-top:6px">${d.hex} · text ${d.fg}</div></div>
+    <div><div class="sw" style="background:${page};color:${d.hex};border-color:${border}">Link text</div><div class="xs mono muted" style="margin-top:6px">${d.hex} on page ${page}</div></div>`;
   const items = []; const pick = (cls, text) => items.push({ cls, text });
   const h = state.bh, s = state.bs, L = state.bl;
-  const onText = contrast(d.fg, d.hex), onPage = contrast(d.hex, g[950]);
+  const onText = contrast(d.fg, d.hex), onPage = contrast(d.hex, page);
   if (isNeutralBrand()) {
-    pick('ok', 'Neutral brand (under 25% saturation). Serious, minimal. Dark mode gets a white button with dark text; light mode gets a black button.');
+    pick('ok', 'Neutral brand (under 25% saturation). Serious, minimal. Dark mode gets a light button with dark text; light mode gets a dark button.');
   } else {
     if (s > 95 && L > 55) pick('warn', `Saturation ${s}% at lightness ${L}% is neon on dark. Pull saturation back to 70–85%.`);
     else pick('ok', `Saturation ${s}% reads as a real color.`);
-    if (onText >= 4.5) pick('ok', `Text (50) on the button passes: ${fmt(onText)}.`);
+    if (onText >= 4.5) pick('ok', `Text on the button passes: ${fmt(onText)}.`);
     else if (onText >= 3) pick('warn', `Text on the button is ${fmt(onText)}. Fine for short bold labels. Lower lightness to about ${Math.max(30, L - 10)}% for 4.5:1.`);
     else pick('bad', `Text on the button fails: ${fmt(onText)}. Lower the brand lightness.`);
     if (onPage >= 3) pick('ok', `As link text on the page it passes 3:1 (${fmt(onPage)}).`);
@@ -588,14 +629,15 @@ function renderBrand(j, g) {
   $('brandChecks').innerHTML = items.map(dotLi).join('');
 }
 
-function renderLight(j, g, rows) {
+function renderLight(j, Lt, rows) {
   const l = j.light.brand;
+  $('lightStrip').innerHTML = Lt.map(x => `<i style="background:${x.hex}" title="${x.n} ${x.hex}"></i>`).join('');
   $('lightBrandPair').innerHTML = `
-    <div><div class="sw" style="background:${l.hex};color:${l.fg}">Button · ${l.step}</div><div class="xs mono muted" style="margin-top:6px">${l.hex} on white</div></div>
-    <div><div class="sw" style="background:#ffffff;color:${l.hex};border-color:${g[state.lBorder]}">Link text</div><div class="xs mono muted" style="margin-top:6px">${l.hex} as text on white</div></div>`;
+    <div><div class="sw" style="background:${l.hex};color:${l.fg}">Button</div><div class="xs mono muted" style="margin-top:6px">${l.hex} on white</div></div>
+    <div><div class="sw" style="background:#ffffff;color:${l.hex};border-color:${Lt[+state.lBorder - 1].hex}">Link text</div><div class="xs mono muted" style="margin-top:6px">${l.hex} as text on white</div></div>`;
   const items = []; const pick = (cls, text) => items.push({ cls, text });
   const onWhite = contrast(l.fg, l.hex), asLink = contrast(l.hex, '#ffffff');
-  if (isNeutralBrand()) pick('ok', `Neutral brand: a ${g[950]} button with white text, ${fmt(onWhite)}.`);
+  if (isNeutralBrand()) pick('ok', `Neutral brand: a ${l.hex} button with white text, ${fmt(onWhite)}.`);
   else {
     if (onWhite >= 4.5) pick('ok', `White text on the light brand passes: ${fmt(onWhite)}.`);
     else if (onWhite >= 3) pick('warn', `White text on the light brand is ${fmt(onWhite)}. Slide brand lightness left until it passes 4.5:1.`);
@@ -609,19 +651,8 @@ function renderLight(j, g, rows) {
   $('lightChecks').innerHTML = items.map(dotLi).join('');
 }
 
-function renderScale(scale) {
-  $('scale').innerHTML = scale.map(x => `<div class="st"><div class="sw" style="background:${x.hex}" title="${x.hex}"></div><div class="lbl">${x.step}</div><div class="hex">${x.hex}<br>L ${x.l}</div></div>`).join('');
-  const flags = [];
-  for (let i = 0; i < scale.length - 1; i++) {
-    const a = scale[i], b = scale[i + 1], dl = b.l - a.l;
-    if (dl < 2) flags.push(`<span class="flag bad">${a.step} and ${b.step} look the same (ΔL ${dl})</span>`);
-    else if (dl > 20) flags.push(`<span class="flag warn">${a.step} → ${b.step} is a big jump (ΔL ${dl})</span>`);
-  }
-  $('neighbor').innerHTML = flags.length ? flags.join('') : '<span class="flag">Neighbor test passed: all 11 steps differ, no jump over 20 points.</span>';
-}
-
 function jobRows(m) {
-  const order = [['page', 'Page background'], ['card', 'Card, panel, dialog'], ['muted', 'Muted fill, hover, input'], ['border', 'Border, divider'], ['disabled', 'Disabled, placeholder'], ['text2', 'Secondary text'], ['text', 'Main text, headings'], ['brand', 'Brand']];
+  const order = [['page', 'Page background'], ['card', 'Card, panel, dialog'], ['muted', 'Inputs, rows, muted fill'], ['hover', 'Hover fill'], ['border', 'Border, divider'], ['border2', 'Input and button border'], ['ring', 'Focus ring'], ['solid', 'Solid gray fill'], ['text2', 'Secondary text'], ['text', 'Main text, headings'], ['brand', 'Brand']];
   return order.map(([k, label]) => { const j = m[k]; return `<tr><td>${label}<div class="tip">${esc(j.why)}</div></td><td class="num">${j.step}</td><td><span class="chip"><i style="background:${j.hex}"></i><code>${j.hex}</code></span></td></tr>`; }).join('');
 }
 function contrastRowsHtml(rows) {
@@ -633,16 +664,18 @@ function contrastRowsHtml(rows) {
 function previewCard(mode, m) {
   const shadow = mode === 'light' ? '0 1px 2px 0 rgb(0 0 0 / .05)' : 'none';
   return `<div class="pv" style="background:${m.page.hex};color:${m.text.hex};border-color:${m.border.hex}">
-    <div class="tag" style="color:${m.text2.hex}">${mode} preview · page ${m.page.step}</div>
+    <div class="tag" style="color:${m.text2.hex}">${mode} preview</div>
     <div class="pcard" style="background:${m.card.hex};border:1px solid ${m.border.hex};box-shadow:${shadow}">
       <h3>Apartment 4B</h3>
-      <div style="color:${m.text2.hex};font-size:14px">3 things left to buy · secondary ${m.text2.step}</div>
-      <div class="line" style="background:${m.muted.hex}">Oat milk <span style="color:${m.text2.hex}">muted ${m.muted.step}</span></div>
+      <div style="color:${m.text2.hex};font-size:14px">3 things left to buy · text ${m.text2.step}</div>
+      <div class="line" style="background:${m.muted.hex}">Oat milk <span style="color:${m.text2.hex}">fill ${m.muted.step}</span></div>
+      <div class="line" style="background:${m.hover.hex}">Bread <span style="color:${m.text2.hex}">hover ${m.hover.step}</span></div>
       <div class="line" style="border:1px solid ${m.border.hex}">Eggs <span style="color:${m.text2.hex}">border ${m.border.step}</span></div>
-      <div class="inp" style="background:${mode === 'dark' ? m.muted.hex : m.page.hex};border:1px solid ${m.border.hex};color:${m.disabled.hex}">Add an item… · placeholder ${m.disabled.step}</div>
+      <div class="inp" style="background:${mode === 'dark' ? m.muted.hex : m.card.hex};border:1px solid ${m.border2.hex};color:${m.text2.hex}">Add an item… · placeholder ${m.text2.step}</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span class="btn" style="background:${m.brand.hex};color:${m.brand.fg}">Add item · brand ${m.brand.step}</span>
-        <span class="btn" style="background:transparent;border:1px solid ${m.border.hex};color:${m.text.hex}">Cancel</span>
+        <span class="btn" style="background:${m.brand.hex};color:${m.brand.fg}">Add item</span>
+        <span class="btn" style="background:${m.solid.hex};color:${m.text.hex}">Solid ${m.solid.step}</span>
+        <span class="btn" style="background:transparent;border:1px solid ${m.border2.hex};color:${m.text.hex}">Cancel</span>
         <span style="color:${m.brand.hex};font-size:14px;text-decoration:underline;text-underline-offset:3px">A link</span>
       </div>
     </div>
@@ -651,96 +684,87 @@ function previewCard(mode, m) {
 
 function themePage(j) {
   const set = (el, m, light) => {
-    el.style.setProperty('--bg', m.page.hex); el.style.setProperty('--card', m.card.hex); el.style.setProperty('--muted', m.muted.hex);
-    el.style.setProperty('--border', m.border.hex); el.style.setProperty('--text', m.text.hex); el.style.setProperty('--text2', m.text2.hex);
-    el.style.setProperty('--disabled', m.disabled.hex); el.style.setProperty('--brand', m.brand.hex); el.style.setProperty('--brand-fg', m.brand.fg);
-    el.style.setProperty('--shadow', light ? '0 1px 2px 0 rgb(0 0 0 / .05)' : 'none');
-    el.style.setProperty('--ok', light ? '#16a34a' : '#22c55e'); el.style.setProperty('--warn', light ? '#d97706' : '#f59e0b'); el.style.setProperty('--bad', light ? '#dc2626' : '#ef4444');
+    const p = (k, v) => el.style.setProperty(k, v);
+    p('--bg', m.page.hex); p('--card', m.card.hex); p('--muted', m.muted.hex); p('--hover', m.hover.hex);
+    p('--border', m.border.hex); p('--border2', m.border2.hex); p('--text', m.text.hex); p('--text2', m.text2.hex); p('--solid', m.solid.hex);
+    p('--brand', m.brand.hex); p('--brand-fg', m.brand.fg);
+    p('--shadow', light ? '0 1px 2px 0 rgb(0 0 0 / .05)' : 'none');
+    p('--ok', light ? '#16a34a' : '#22c55e'); p('--warn', light ? '#d97706' : '#f59e0b'); p('--bad', light ? '#dc2626' : '#ef4444');
   };
   set(document.documentElement, j.dark, false);
   set($('lightZone'), j.light, true);
 }
 
 /* ---------- exports ---------- */
-function exportCss(j, g) {
+function exportCss(j) {
   const d = j.dark, l = j.light;
+  const block = (m) => `  --background: ${m.page.hex};
+  --foreground: ${m.text.hex};
+  --card: ${m.card.hex};
+  --card-foreground: ${m.text.hex};
+  --popover: ${m.card.hex};
+  --popover-foreground: ${m.text.hex};
+  --primary: ${m.brand.hex};
+  --primary-foreground: ${m.brand.fg};
+  --secondary: ${m.muted.hex};
+  --secondary-foreground: ${m.text.hex};
+  --muted: ${m.muted.hex};
+  --muted-foreground: ${m.text2.hex};
+  --accent: ${m.hover.hex};
+  --accent-foreground: ${m.text.hex};
+  --border: ${m.border.hex};
+  --input: ${m.border2.hex};
+  --ring: ${m.brand.hex};`;
   return `/* Pick Your Grays — paste over the matching lines in globals.css
-   Gray: hue ${state.h}° · saturation ${state.s}% · page ${g[950]} · text ${g[50]}
+   Gray: hue ${state.h}° · saturation ${state.s}% · dark page ${d.page.hex} · dark text ${d.text.hex}
    Brand: ${d.brand.hex} (dark) · ${l.brand.hex} (light) */
 
 :root {
-  --background: ${l.page.hex};
-  --foreground: ${l.text.hex};
-  --card: ${l.card.hex};
-  --card-foreground: ${l.text.hex};
-  --popover: ${l.card.hex};
-  --popover-foreground: ${l.text.hex};
-  --primary: ${l.brand.hex};
-  --primary-foreground: ${l.brand.fg};
-  --secondary: ${l.muted.hex};
-  --secondary-foreground: ${g[900]};
-  --muted: ${l.muted.hex};
-  --muted-foreground: ${l.text2.hex};
-  --accent: ${l.muted.hex};
-  --accent-foreground: ${g[900]};
-  --border: ${l.border.hex};
-  --input: ${l.border.hex};
-  --ring: ${l.brand.hex};
+${block(l)}
 }
 
 .dark {
-  --background: ${d.page.hex};
-  --foreground: ${d.text.hex};
-  --card: ${d.card.hex};
-  --card-foreground: ${d.text.hex};
-  --popover: ${d.card.hex};
-  --popover-foreground: ${d.text.hex};
-  --primary: ${d.brand.hex};
-  --primary-foreground: ${d.brand.fg};
-  --secondary: ${d.muted.hex};
-  --secondary-foreground: ${d.text.hex};
-  --muted: ${d.muted.hex};
-  --muted-foreground: ${d.text2.hex};
-  --accent: ${d.muted.hex};
-  --accent-foreground: ${d.text.hex};
-  --border: ${d.border.hex};
-  --input: ${d.border.hex};
-  --ring: ${d.brand.hex};
+${block(d)}
 }
 `;
 }
-function exportTailwind(scale) {
-  return `/* Tailwind CSS v4 — adds bg-gray-950, text-gray-400, etc.
-   Prefer the job tokens in globals.css for app code; use this scale for one-offs and charts. */
+function exportTailwind(D, Lt) {
+  return `/* Tailwind CSS v4 — the full 12-step scales as bg-gray-1 … bg-gray-12 (dark) and bg-graylight-1 … 12.
+   Prefer the job tokens in globals.css for app code; use these for one-offs and charts. */
 @theme {
-${scale.map(x => `  --color-gray-${x.step}: ${x.hex};`).join('\n')}
+${D.map(x => `  --color-gray-${x.n}: ${x.hex};`).join('\n')}
+${Lt.map(x => `  --color-graylight-${x.n}: ${x.hex};`).join('\n')}
 }
 `;
 }
-function exportJson(scale, j) {
+function exportJson(D, Lt, j) {
   return JSON.stringify({
-    source: { gray: { hue: state.h, saturation: state.s, pageLightness: state.l, textLightness: state.textL, boostDarkSaturation: state.boost }, brand: { dark: state.brand, lightAdjust: state.lbAdj }, light: { secondaryText: +state.lText2, border: +state.lBorder, muted: +state.lMuted } },
-    scale: Object.fromEntries(scale.map(x => [x.step, x.hex])),
+    source: { gray: { hue: state.h, saturation: state.s, lightness: state.l, overrides: state.ov }, brand: { dark: state.brand, lightAdjust: state.lbAdj }, light: { secondaryText: +state.lText2, border: +state.lBorder, muted: +state.lMuted } },
+    dark: Object.fromEntries(D.map(x => [x.n, x.hex])),
+    light: Object.fromEntries(Lt.map(x => [x.n, x.hex])),
     jobs: { dark: Object.fromEntries(Object.entries(j.dark).map(([k, v]) => [k, v.hex])), light: Object.fromEntries(Object.entries(j.light).map(([k, v]) => [k, v.hex])) },
   }, null, 2) + '\n';
 }
-function exportPrompt(scale, j, rows) {
-  const g = byStep(scale);
+function exportPrompt(D, Lt, j, rows) {
   const fails = [...rows.dark.map(r => ({ ...r, mode: 'Dark' })), ...rows.light.map(r => ({ ...r, mode: 'Light' }))].filter(r => r.ratio < r.need);
   return `Read RULES.md (Pick Your Grays) and follow every rule in it.
 
-My gray: hue ${state.h}°, saturation ${state.s}%. Dark page (950) is ${g[950]}. Text (50) is ${g[50]}.
+My gray: hue ${state.h}°, saturation ${state.s}%. Dark page is ${D[0].hex}. Dark text is ${D[11].hex}.
 My brand color on dark is ${j.dark.brand.hex}. On light it is ${j.light.brand.hex}.
 
-I already built the scale. Use these exact hexes, do not regenerate them:
-${scale.map(x => `  ${x.step}: ${x.hex}`).join('\n')}
+I already built the scales. Use these exact hexes, do not regenerate them.
+Dark, 12 steps (1 = page … 12 = text):
+${D.map((x, i) => `  ${String(x.n).padStart(2)}: ${x.hex}  ${JOBS12[i][0]}`).join('\n')}
+Light, 12 steps:
+${Lt.map((x, i) => `  ${String(x.n).padStart(2)}: ${x.hex}  ${JOBS12[i][0]}`).join('\n')}
 
 Jobs (dark → light):
   page background  ${j.dark.page.hex} → ${j.light.page.hex}
   card / panel     ${j.dark.card.hex} → ${j.light.card.hex}
-  muted / hover    ${j.dark.muted.hex} → ${j.light.muted.hex}
+  inputs, rows     ${j.dark.muted.hex} → ${j.light.muted.hex}
+  hover fill       ${j.dark.hover.hex} → ${j.light.hover.hex}
   border           ${j.dark.border.hex} → ${j.light.border.hex}
-  disabled         ${j.dark.disabled.hex} → ${j.light.disabled.hex}
+  input border     ${j.dark.border2.hex} → ${j.light.border2.hex}
   secondary text   ${j.dark.text2.hex} → ${j.light.text2.hex}
   main text        ${j.dark.text.hex} → ${j.light.text.hex}
   brand            ${j.dark.brand.hex} (text ${j.dark.brand.fg}) → ${j.light.brand.hex} (text ${j.light.brand.fg})
@@ -750,7 +774,7 @@ Contrast: ${fails.length ? fails.length + ' pair(s) fail. Fix these first and te
 Do this:
 1. Write these into globals.css as CSS variables under :root (light) and .dark (dark), using only the job names already in that file (--background, --foreground, --card, --card-foreground, --primary, --primary-foreground, --secondary, --muted, --muted-foreground, --accent, --border, --input, --ring). Do not add new variable names.
 2. Never use raw hex or raw Tailwind colors (bg-zinc-900, text-gray-500) anywhere else in the app. Job tokens only.
-3. Dark mode gets no shadows; depth is card (900) on page (950) with an 800 border. Light mode cards are white with a ${j.light.border.step} border and shadow-sm.
+3. Dark mode gets no shadows; depth is step 2 on step 1 with a step 6 border. Light mode cards are white with a border and shadow-sm.
 4. Report the exact lines you changed.
 `;
 }
@@ -759,16 +783,16 @@ Do this:
 let current = {};
 function render() {
   state.brand = state.brandExact || hsl(state.bh, state.bs, state.bl);
-  const scale = buildScale(), g = byStep(scale), j = jobs(g), rows = contrastRows(j);
-  current = { scale, g, j, rows };
+  const D = buildDark(), Lt = buildLight(D), j = jobs(D, Lt), rows = contrastRows(j);
+  current = { D, Lt, j, rows };
   renderControls();
-  renderRuleChecks(g);
-  renderBrand(j, g);
-  renderScale(scale);
+  renderRuleChecks(D);
+  renderSteps(D);
+  renderBrand(j, D);
   $('jobsDark').innerHTML = jobRows(j.dark);
   $('contrastDark').innerHTML = contrastRowsHtml(rows.dark);
   $('previewDark').innerHTML = previewCard('dark', j.dark);
-  renderLight(j, g, rows.light);
+  renderLight(j, Lt, rows.light);
   $('jobsLight').innerHTML = jobRows(j.light);
   $('contrastLight').innerHTML = contrastRowsHtml(rows.light);
   $('previewLight').innerHTML = previewCard('light', j.light);
@@ -777,45 +801,47 @@ function render() {
   save();
 }
 function renderExport() {
-  const { scale, g, j, rows } = current;
-  $('exportOut').value = state.tab === 'css' ? exportCss(j, g) : state.tab === 'tailwind' ? exportTailwind(scale) : state.tab === 'json' ? exportJson(scale, j) : exportPrompt(scale, j, rows);
+  const { D, Lt, j, rows } = current;
+  $('exportOut').value = state.tab === 'css' ? exportCss(j) : state.tab === 'tailwind' ? exportTailwind(D, Lt) : state.tab === 'json' ? exportJson(D, Lt, j) : exportPrompt(D, Lt, j, rows);
 }
 
 /* ---------- persistence ---------- */
-const KEY = 'pick-your-grays-v2';
+const KEY = 'pick-your-grays-v3';
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
   try {
-    const p = new URLSearchParams({ h: state.h, s: state.s, l: state.l, t: state.textL, brand: state.brand.replace('#', ''), lb: state.lbAdj, t2: state.lText2, bd: state.lBorder, mu: state.lMuted, boost: state.boost ? 1 : 0 });
+    const ov = Object.entries(state.ov).map(([k, v]) => k + ':' + v).join(',');
+    const p = new URLSearchParams({ h: state.h, s: state.s, l: state.l, ov, brand: state.brand.replace('#', ''), lb: state.lbAdj, t2: state.lText2, bd: state.lBorder, mu: state.lMuted });
     history.replaceState(null, '', '#' + p.toString());
   } catch (e) {}
 }
 function load() {
   try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && typeof saved === 'object') Object.assign(state, saved); } catch (e) {}
+  state.open = null;
   try {
     const p = new URLSearchParams(location.hash.slice(1));
     if (p.has('h')) {
       state.h = clamp(+p.get('h') || 0, 0, 360); state.s = clamp(+p.get('s') || 0, 0, 50); state.l = clamp(+p.get('l') || 0, 0, 14);
-      state.textL = clamp(+p.get('t') || 98, 90, 100);
+      state.ov = {};
+      (p.get('ov') || '').split(',').filter(Boolean).forEach(kv => { const [k, v] = kv.split(':'); if (+k >= 0 && +k < 12) state.ov[+k] = clamp(+v, 0, 100); });
       if (hexToRgb('#' + (p.get('brand') || ''))) setBrandFromHex('#' + p.get('brand'));
       state.lbAdj = clamp(+p.get('lb') || 0, -30, 10);
-      if (['500', '600'].includes(p.get('t2'))) state.lText2 = p.get('t2');
-      if (['200', '300'].includes(p.get('bd'))) state.lBorder = p.get('bd');
-      if (['100', '50'].includes(p.get('mu'))) state.lMuted = p.get('mu');
-      state.boost = p.get('boost') === '1';
+      if (['11', '10'].includes(p.get('t2'))) state.lText2 = p.get('t2');
+      if (['6', '7'].includes(p.get('bd'))) state.lBorder = p.get('bd');
+      if (['3', '2'].includes(p.get('mu'))) state.lMuted = p.get('mu');
     }
   } catch (e) {}
 }
 
 /* ---------- events ---------- */
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2200); }
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400); }
 function setBrandFromHex(hex) { const rgb = hexToRgb(hex); if (!rgb) return false; [state.bh, state.bs, state.bl] = rgbToHsl(rgb); state.brandExact = rgbToHex(rgb); return true; }
 function setAnchorFromHex(hex, tame) {
   const rgb = hexToRgb(hex); if (!rgb) return false;
   let [h, s, l] = rgbToHsl(rgb);
   let note = '';
-  if (tame && s > 12) { note = ` Saturation was ${s}%, pulled back to 10% so the mid steps stay gray.`; s = 10; }
-  if (tame && l === 0) { note += ' Page was #000, raised to 4% (Rule 1).'; l = 4; }
+  if (tame && s > 12) { note = ` Saturation was ${s}%, pulled back to 10% so the middle steps stay gray.`; s = 10; }
+  if (tame && l === 0) { note += ' It was #000, raised to 4% so nothing floats.'; l = 4; }
   state.h = h; state.s = clamp(s, 0, 50); state.l = clamp(l, 0, 14);
   return note;
 }
@@ -823,10 +849,31 @@ const on = (id, ev, fn) => $(id).addEventListener(ev, fn);
 on('hue', 'input', e => { state.h = +e.target.value; state.source = ''; render(); });
 on('sat', 'input', e => { state.s = +e.target.value; state.source = ''; render(); });
 on('light', 'input', e => { state.l = +e.target.value; state.source = ''; render(); });
-on('textL', 'input', e => { state.textL = +e.target.value; render(); });
-on('boost', 'change', e => { state.boost = e.target.checked; render(); });
 on('anchorHex', 'input', e => { if (setAnchorFromHex(e.target.value) !== false) { state.source = ''; render(); } });
 on('anchorHex', 'blur', render);
+on('swatches', 'click', e => {
+  const b = e.target.closest('[data-sw]'); if (!b) return;
+  const ex = EXAMPLES[+b.dataset.sw];
+  const note = setAnchorFromHex(ex.dark.page, true);
+  state.source = 'ex:' + b.dataset.sw; state.ov = {}; render();
+  toast(`Starting from ${ex.name}: ${ex.dark.page}.${note}`);
+});
+on('steps', 'click', e => {
+  if (e.target.closest('[data-stop]') && !e.target.closest('[data-reset]')) return;
+  const r = e.target.closest('[data-reset]');
+  if (r) { delete state.ov[+r.dataset.reset]; render(); return; }
+  const row = e.target.closest('[data-step]'); if (!row) return;
+  const i = +row.dataset.step; state.open = state.open === i ? null : i; render();
+});
+on('steps', 'keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-step]')) { e.preventDefault(); e.target.click(); } });
+on('steps', 'input', e => {
+  const s = e.target.closest('[data-ov]'); if (!s) return;
+  const i = +s.dataset.ov, v = +s.value;
+  if (v === current.D[i].base) delete state.ov[i]; else state.ov[i] = v;
+  render();
+  const again = document.getElementById('ov' + i); if (again) again.focus();
+});
+on('resetSteps', 'click', () => { state.ov = {}; render(); toast('Scale reset to generated values'); });
 on('brandHex', 'input', e => { if (setBrandFromHex(e.target.value)) render(); });
 on('brandHex', 'blur', render);
 on('brandColor', 'input', e => { if (setBrandFromHex(e.target.value)) render(); });
@@ -839,25 +886,9 @@ on('brandPick', 'change', e => {
   $('brandPickNote').textContent = `${ex.name}: ${ex.brand.note || ''}`;
 });
 on('tintFromBrand', 'click', () => {
-  if (isNeutralBrand()) { state.h = 240; state.s = clamp(state.s, 3, 10); toast('Neutral brand, so the gray goes neutral (zinc-like)'); }
-  else { state.h = state.bh; if (state.s < 3 || state.s > 10) state.s = 8; }
+  if (isNeutralBrand()) { state.h = 240; state.s = clamp(state.s, 3, 10); toast('Neutral brand, so the gray goes neutral'); }
+  else { state.h = state.bh; if (state.s < 3 || state.s > 10) state.s = 8; toast(`Gray hue set to ${state.h}°`); }
   state.source = ''; render();
-});
-on('gallery', 'click', e => {
-  const b = e.target.closest('[data-gallery]'); if (!b) return;
-  const ex = EXAMPLES[+b.dataset.gallery];
-  const note = setAnchorFromHex(ex.dark.page, true);
-  const [, , tl] = rgbToHsl(hexToRgb(ex.dark.text)); state.textL = clamp(tl, 90, 100);
-  state.source = 'ex:' + b.dataset.gallery; render();
-  toast(`Starting from ${ex.name}: page ${ex.dark.page}, text ${ex.dark.text}.${note}`);
-});
-on('scales', 'click', e => {
-  const b = e.target.closest('[data-scale]'); if (!b) return;
-  const sc = SCALES[+b.dataset.scale];
-  const note = setAnchorFromHex(sc.anchor, true);
-  const [, , tl] = rgbToHsl(hexToRgb(sc.steps[10])); state.textL = clamp(tl, 90, 100);
-  state.source = 'sc:' + b.dataset.scale; render();
-  toast(`Starting from ${sc.name}: page ${sc.anchor}.${note}`);
 });
 on('lbAdj', 'input', e => { state.lbAdj = +e.target.value; render(); });
 [['lText2Seg', 'lText2'], ['lBorderSeg', 'lBorder'], ['lMutedSeg', 'lMuted']].forEach(([id, key]) =>
@@ -867,7 +898,7 @@ on('copyBtn', 'click', async () => { try { await navigator.clipboard.writeText($
 on('shareBtn', 'click', async () => { try { await navigator.clipboard.writeText(location.href); toast('Link copied'); } catch (e) { toast('Copy the URL from the address bar'); } });
 
 load();
-renderGallery();
+renderStatic();
 render();
 </script>
 </body>
