@@ -1,6 +1,6 @@
 # Pick Your Grays
 
-Pick one dark gray (or one white). Get the whole neutral scale, the job assignments for both modes, twelve contrast checks, and a `globals.css` snippet you can paste. No build step; open [index.html](index.html) in a browser.
+Pick one dark gray (or one white). Get the whole neutral scale, the job assignments for both modes, twelve contrast checks, and a `globals.css` snippet you can paste. No build step; use it live at [kjplayslife.github.io/ai-design-kit/tools/pick-your-grays/](https://kjplayslife.github.io/ai-design-kit/tools/pick-your-grays/) or open [index.html](index.html) in a browser.
 
 ## What it does
 
