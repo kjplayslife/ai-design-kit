@@ -10,7 +10,6 @@ This is not an app. It's a set of things you paste into an AI chat, or open in a
 
 | Folder | What it's for |
 |---|---|
-| [design-starter/](design-starter/) | `DESIGN.md`, a `globals.css`, and a kitchen-sink page. Drop into a React + Tailwind v4 + shadcn project and tell the agent "Read DESIGN.md and follow it." |
 | [tools/pick-your-grays/](tools/pick-your-grays/) | Pick one dark gray or one white, get the full neutral scale, job assignments for both modes, 12 contrast checks, and a `globals.css` snippet. Open `index.html`. |
 
 ## How to use it
@@ -22,7 +21,7 @@ This is not an app. It's a set of things you paste into an AI chat, or open in a
 
 ## Roadmap
 
-- [x] Design starter (DESIGN.md + globals.css)
+- [ ] Design starter (a DESIGN.md + globals.css you drop into a project; coming back later)
 - [x] Pick Your Grays
 - [x] Pick your brand color (folded into Pick Your Grays as Step 1)
 - [ ] Type scale picker

@@ -4,7 +4,7 @@ Pick one dark gray (or one white). Get the whole neutral scale, the job assignme
 
 ## What it does
 
-1. **Pick your brand color first.** Hue, saturation, and lightness sliders, plus the ten safe picks from DESIGN.md. Checks that white text passes on it, that it reads as a color, that it stays visible on both page backgrounds, and warns on red (that's for errors) and yellow or lime (white text never passes). The dark-mode 500 step is derived and checked too; a near-black brand flips to a white button on dark.
+1. **Pick your brand color first.** Hue, saturation, and lightness sliders, plus ten safe picks (Tailwind 600 steps). Checks that white text passes on it, that it reads as a color, that it stays visible on both page backgrounds, and warns on red (that's for errors) and yellow or lime (white text never passes). The dark-mode 500 step is derived and checked too; a near-black brand flips to a white button on dark.
 2. **Then your starting gray.** Your dark page background (950) or your light-mode "white" (50). Either way you set a hue, a saturation, and a lightness. One click tints the gray from your brand hue.
 3. **Builds the 11-step scale** using the lightness ladder from the rules. Same hue, same saturation, only lightness changes. Runs the neighbor test.
 4. **Assigns jobs** for dark and light mode, mirroring the jobs, not the hexes.
