@@ -22,7 +22,7 @@ This is not an app. It's a set of things you paste into an AI chat, or open in a
 
 - [x] Design starter (DESIGN.md + globals.css)
 - [x] Pick Your Grays
-- [ ] Pick your brand color (600/500 pairs that pass contrast)
+- [x] Pick your brand color (folded into Pick Your Grays as Step 1)
 - [ ] Type scale picker
 - [ ] More real-world dark-mode examples
 

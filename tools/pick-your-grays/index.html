@@ -89,6 +89,14 @@
   .seg button + button { border-left: 1px solid var(--border); }
   .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
 
+  /* brand presets */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips button { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px 0 8px; font-size: 13px; }
+  .chips i { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); flex: none; }
+  .chips .grp { width: 100%; font-size: 12px; color: var(--text2); margin-top: 4px; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pair .sw { height: 72px; border-radius: var(--radius); border: 1px solid var(--border); display: grid; place-items: center; font-size: 14px; font-weight: 500; }
+
   /* anchor swatch */
   .anchor { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; }
   .anchor .sw { width: 96px; height: 96px; border-radius: var(--radius); border: 1px solid var(--border); }
@@ -171,9 +179,59 @@
     </div>
   </header>
 
-  <!-- STEP 1 -->
+  <!-- STEP 1: BRAND -->
   <section>
-    <div class="step"><span class="n">Step 1</span><h2>Pick your starting color</h2></div>
+    <div class="step"><span class="n">Step 1</span><h2>Pick your brand color</h2></div>
+    <p class="muted">One color. It's for buttons, links, and the one thing on each screen that matters most. It covers about 10% of the screen. Your gray takes its hue from it, so pick this first.</p>
+
+    <div class="grid2">
+      <div class="card" style="display:grid;gap:20px">
+        <div class="field">
+          <label>Safe picks (Tailwind 600 steps)</label>
+          <div class="chips" id="brandPresets"></div>
+          <div class="hint">Every one of these passes white-text contrast. Pick by feeling, then nudge the sliders if you want.</div>
+        </div>
+
+        <div class="field">
+          <div class="range-head"><label for="bh" style="margin:0">Hue</label><span class="val" id="bhVal"></span></div>
+          <input type="range" id="bh" min="0" max="360" step="1" value="221">
+          <div class="hint">Blue / indigo (220–250) reads as trust. Green / teal (150–180) reads as growth. Violet / orange (270, 20) reads as energy. Skip 45–95 (yellow, lime) and 0–12 (red).</div>
+        </div>
+
+        <div class="field">
+          <div class="range-head"><label for="bs" style="margin:0">Saturation</label><span class="val" id="bsVal"></span></div>
+          <input type="range" id="bs" min="0" max="100" step="1" value="83">
+          <div class="hint">Brand colors are 60–95% saturated. Under about 30% it reads as a tinted gray, not a brand. The exception is a near-black button (zinc-900).</div>
+        </div>
+
+        <div class="field">
+          <div class="range-head"><label for="bl" style="margin:0">Lightness</label><span class="val" id="blVal"></span></div>
+          <input type="range" id="bl" min="0" max="100" step="1" value="53">
+          <div class="hint">This is your 600 step (light mode). 35–50% is the zone where white text passes 4.5:1. The 500 step for dark mode is derived: 8 points lighter, saturation pulled back 15%.</div>
+        </div>
+      </div>
+
+      <div class="card" style="display:grid;gap:20px;align-content:start">
+        <div class="field">
+          <label for="brandHex">My brand color (600, light mode)</label>
+          <div class="row">
+            <input type="color" id="brandColor" value="#2563eb" aria-label="Brand color picker">
+            <input type="text" id="brandHex" value="#2563eb" class="mono" style="width:130px" spellcheck="false">
+            <span class="hint mono" id="brandHsl"></span>
+          </div>
+        </div>
+        <div class="pair" id="brandPair"></div>
+        <div>
+          <h3 style="margin-bottom:8px">Rule check</h3>
+          <ul class="checks" id="brandChecks"></ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: GRAY -->
+  <section>
+    <div class="step"><span class="n">Step 2</span><h2>Pick your starting gray</h2></div>
     <p class="muted">Everything else comes from this one color. Dark first is easier: if your grays work on dark, light mode is a mirror.</p>
 
     <div class="grid2">
@@ -188,13 +246,12 @@
         </div>
 
         <div class="field">
-          <label for="brandHex">Your brand color</label>
+          <label>Tint from your brand</label>
           <div class="row">
-            <input type="color" id="brandColor" value="#2563eb" aria-label="Brand color picker">
-            <input type="text" id="brandHex" value="#2563eb" class="mono" style="width:120px" spellcheck="false">
+            <span class="chip"><i id="brandMini" style="width:24px;height:24px"></i><code id="brandMiniHex"></code></span>
             <button type="button" id="tintFromBrand">Tint gray from brand</button>
           </div>
-          <div class="hint">Rule 2: the gray keeps your brand hue at 3–10% saturation. This is treated as your 600 step (light mode). The 500 step for dark is derived.</div>
+          <div class="hint">Rule 2: the gray keeps your brand hue at 3–10% saturation.</div>
         </div>
 
         <div class="field">
@@ -243,9 +300,9 @@
     </div>
   </section>
 
-  <!-- STEP 2 -->
+  <!-- STEP 3 -->
   <section>
-    <div class="step"><span class="n">Step 2</span><h2>Build the scale</h2></div>
+    <div class="step"><span class="n">Step 3</span><h2>Build the scale</h2></div>
     <p class="muted">Eleven steps from one color. Keep the hue. Keep the saturation. Only change lightness, using the ladder 5 · 10 · 16 · 25 · 33 · 46 · 64 · 83 · 90 · 96 · 98. The steps bunch up at the light end because the eye can tell light grays apart and you need many for backgrounds and borders.</p>
     <div class="card" style="display:grid;gap:16px">
       <div class="scale" id="scale"></div>
@@ -256,9 +313,9 @@
     </div>
   </section>
 
-  <!-- STEP 3 -->
+  <!-- STEP 4 -->
   <section>
-    <div class="step"><span class="n">Step 3</span><h2>Give each step a job</h2></div>
+    <div class="step"><span class="n">Step 4</span><h2>Give each step a job</h2></div>
     <p class="muted">Dark mode uses six of the eleven. Light mode mirrors the jobs, not the hexes. Lighter means closer to the viewer on dark; on light, depth comes from border and shadow instead.</p>
     <div class="grid2">
       <div class="card">
@@ -272,9 +329,9 @@
     </div>
   </section>
 
-  <!-- STEP 4 -->
+  <!-- STEP 5 -->
   <section>
-    <div class="step"><span class="n">Step 4</span><h2>Check contrast</h2></div>
+    <div class="step"><span class="n">Step 5</span><h2>Check contrast</h2></div>
     <p class="muted">Twelve pairs. Text needs 4.5:1. Borders only need to be visible. If one fails, move the step, not the rule.</p>
     <div class="card" style="overflow-x:auto">
       <table>
@@ -373,6 +430,12 @@ const fmt = r => (Math.round(r * 10) / 10).toFixed(1) + ':1';
 /* ---------- the ladder ---------- */
 const STEPS = [950, 900, 800, 700, 600, 500, 400, 300, 200, 100, 50];
 const LADDER = [5, 10, 16, 25, 33, 46, 64, 83, 90, 96, 98];
+const BRAND_PRESETS = [
+  { group: 'Trust, calm', items: [['blue-600', '#2563eb'], ['indigo-600', '#4f46e5'], ['sky-600', '#0284c7']] },
+  { group: 'Growth, health, money', items: [['green-600', '#16a34a'], ['emerald-600', '#059669'], ['teal-600', '#0d9488']] },
+  { group: 'Energy, creative', items: [['violet-600', '#7c3aed'], ['orange-600', '#ea580c'], ['rose-600', '#e11d48']] },
+  { group: 'Serious, minimal', items: [['zinc-900', '#18181b']] },
+];
 const PRESETS = {
   // Same hues as Tailwind slate / zinc / stone. Saturation is held at 10 because the
   // scale keeps one S value on every step: slate-950's real S47 hides at L5 but would
@@ -388,7 +451,8 @@ const state = {
   preview: 'dark',
   h: 240, s: 10, l: 4,
   lightL: 98,         // remembered when switching start mode
-  brand: '#2563eb',
+  bh: 221, bs: 83, bl: 53,   // brand color as HSL; state.brand (hex) is derived from these on every render
+  brand: '#2563eb', brandExact: '#2563eb',
   boost: false,
   tab: 'css',
 };
@@ -412,17 +476,20 @@ function buildScale() {
 }
 const byStep = scale => Object.fromEntries(scale.map(x => [x.step, x.hex]));
 
-function brandPair() {
-  const rgb = hexToRgb(state.brand) || hexToRgb('#2563eb');
-  const [h, s, l] = rgbToHsl(rgb);
-  const b600 = rgbToHex(rgb);
-  const b500 = hsl(h, Math.round(s * 0.85), clamp(l + 8, 0, 72));
-  return { b600, b500 };
+const isNearBlackBrand = () => state.bl < 20 && state.bs < 25;
+function brandPair(g) {
+  const b600 = state.brand;
+  if (isNearBlackBrand() && g) {
+    // A black button has no dark-mode equivalent; it flips to a white button (the 50 step) with 950 text.
+    return { b600, b500: g[50], fg600: '#ffffff', fg500: g[950], flipped: true };
+  }
+  const b500 = hsl(state.bh, Math.round(state.bs * 0.85), clamp(state.bl + 8, 0, 72));
+  return { b600, b500, fg600: '#ffffff', fg500: g ? g[50] : '#ffffff', flipped: false };
 }
 
 function jobs(scale) {
   const g = byStep(scale);
-  const { b600, b500 } = brandPair();
+  const { b600, b500, fg600, fg500, flipped } = brandPair(g);
   return {
     dark: {
       page: { step: 950, hex: g[950], why: 'The base. Not black.' },
@@ -432,7 +499,7 @@ function jobs(scale) {
       disabled: { step: 600, hex: g[600], why: 'Readable but clearly off.' },
       text2: { step: 400, hex: g[400], why: 'Passes 4.5:1 on 950. 500 does not.' },
       text: { step: 50, hex: g[50], why: 'Your white.' },
-      brand: { step: '500', hex: b500, why: 'Lighter pops on black. Saturation pulled back.' },
+      brand: { step: flipped ? '50' : '500', hex: b500, fg: fg500, why: flipped ? 'Black brand flips to a white button on dark.' : 'Lighter pops on black. Saturation pulled back.' },
     },
     light: {
       page: { step: 'white', hex: '#ffffff', why: 'Pure white is fine for the page.' },
@@ -442,7 +509,7 @@ function jobs(scale) {
       disabled: { step: 400, hex: g[400], why: '' },
       text2: { step: 500, hex: g[500], why: '500 passes on white. 400 fails.' },
       text: { step: 950, hex: g[950], why: 'Your black. Not #000.' },
-      brand: { step: '600', hex: b600, why: 'Darker on light so white text passes.' },
+      brand: { step: '600', hex: b600, fg: fg600, why: 'Darker on light so white text passes.' },
     },
   };
 }
@@ -455,13 +522,13 @@ function contrastRows(j, g) {
     { mode: 'Dark', name: 'Secondary text (400) on page (950)', fg: d.text2.hex, bg: d.page.hex, need: 4.5, tip: 'Use 300 for secondary text, or lower the background.' },
     { mode: 'Dark', name: 'Secondary text (400) on card (900)', fg: d.text2.hex, bg: d.card.hex, need: 4.5, tip: 'Use 300 for secondary text on cards.' },
     { mode: 'Dark', name: 'Border (800) on page (950)', fg: d.border.hex, bg: d.page.hex, need: 1.2, deco: true, tip: 'Use 700 for borders.' },
-    { mode: 'Dark', name: 'Text (50) on brand (500)', fg: d.text.hex, bg: d.brand.hex, need: 4.5, tip: 'Use the 600 brand step for text-heavy buttons.' },
+    { mode: 'Dark', name: 'Text on brand (500)', fg: d.brand.fg, bg: d.brand.hex, need: 4.5, tip: 'Use the 600 brand step for text-heavy buttons.' },
     { mode: 'Light', name: 'Main text (950) on white', fg: l.text.hex, bg: l.page.hex, need: 4.5, tip: '' },
     { mode: 'Light', name: 'Secondary text (500) on white', fg: l.text2.hex, bg: l.page.hex, need: 4.5, tip: 'Use 600 for secondary text.' },
     { mode: 'Light', name: 'Secondary text (500) on muted (100)', fg: l.text2.hex, bg: l.muted.hex, need: 4.5, tip: 'Borderline by design. Use 600 inside muted fills.' },
     { mode: 'Light', name: 'Main text (950) on muted (100)', fg: l.text.hex, bg: l.muted.hex, need: 4.5, tip: '' },
     { mode: 'Light', name: 'Border (200) on white', fg: l.border.hex, bg: l.page.hex, need: 1.2, deco: true, tip: 'Use 300 for borders.' },
-    { mode: 'Light', name: 'White on brand (600)', fg: '#ffffff', bg: l.brand.hex, need: 4.5, tip: 'Pick a darker brand step (700) for buttons with text.' },
+    { mode: 'Light', name: 'White on brand (600)', fg: l.brand.fg, bg: l.brand.hex, need: 4.5, tip: 'Lower the brand lightness until this passes.' },
   ].map(r => ({ ...r, ratio: contrast(r.fg, r.bg) }));
 }
 
@@ -490,7 +557,13 @@ function renderControls() {
   if (document.activeElement !== $('anchorHex')) $('anchorHex').value = anchor;
   $('anchorHsl').textContent = `H ${state.h}  S ${state.s}%  L ${state.l}%`;
   if (document.activeElement !== $('brandHex')) $('brandHex').value = state.brand;
-  if (hexToRgb(state.brand)) $('brandColor').value = state.brand;
+  $('brandColor').value = state.brand;
+  $('bh').value = state.bh; $('bhVal').textContent = state.bh + '°';
+  $('bs').value = state.bs; $('bsVal').textContent = state.bs + '%';
+  $('bl').value = state.bl; $('blVal').textContent = state.bl + '%';
+  $('brandHsl').textContent = `H ${state.bh}  S ${state.bs}%  L ${state.bl}%`;
+  $('brandMini').style.background = state.brand; $('brandMiniHex').textContent = state.brand;
+  document.querySelectorAll('#brandPresets button').forEach(b => b.setAttribute('aria-pressed', b.dataset.hex === state.brand));
   $('boost').checked = state.boost;
   document.querySelectorAll('#startSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.start === state.start));
   document.querySelectorAll('#previewSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.preview === state.preview));
@@ -535,6 +608,51 @@ function renderRuleChecks(scale) {
   $('ruleChecks').innerHTML = items.map(i => `<li><span class="dot ${i.cls}">${i.cls === 'ok' ? '✓' : i.cls === 'warn' ? '!' : '✕'}</span><span>${esc(i.text)}</span></li>`).join('');
 }
 
+function renderBrand(j, g) {
+  const d = j.dark.brand, l = j.light.brand;
+  $('brandPair').innerHTML = `
+    <div><div class="sw" style="background:${l.hex};color:${l.fg}">Light · 600</div><div class="xs mono muted" style="margin-top:6px">${l.hex} on white</div></div>
+    <div><div class="sw" style="background:${d.hex};color:${d.fg}">Dark · ${d.step}</div><div class="xs mono muted" style="margin-top:6px">${d.hex} on ${g[950]}</div></div>`;
+
+  const items = [];
+  const pick = (cls, text) => items.push({ cls, text });
+  const cWhite = contrast(l.fg, l.hex);
+  const cDark = contrast(d.fg, d.hex);
+  const onWhite = contrast(l.hex, '#ffffff');
+  const onPage = contrast(d.hex, g[950]);
+  const h = state.bh, s = state.bs, L = state.bl;
+  const hueIn = (a, b) => h >= a && h <= b;
+
+  if (isNearBlackBrand()) {
+    pick('ok', 'Near-black brand. Serious, minimal. It becomes a white button in dark mode. Pair it with a neutral gray (zinc).');
+  } else {
+    if (s < 30) pick('warn', `Saturation ${s}% reads as a tinted gray, not a brand. Push it above 60%, or go near-black on purpose (zinc-900).`);
+    else if (s > 95 && L > 45) pick('warn', `Saturation ${s}% at this lightness is neon. Pull it back a little.`);
+    else pick('ok', `Saturation ${s}% reads as a real color.`);
+  }
+
+  if (cWhite >= 4.5) pick('ok', `White text on it passes: ${fmt(cWhite)}. Good for buttons and links in light mode.`);
+  else if (cWhite >= 3) pick('warn', `White text on it is ${fmt(cWhite)}. Passes for big text only. Lower the lightness to about ${Math.max(20, L - 10)}% for 4.5:1.`);
+  else pick('bad', `White text on it fails: ${fmt(cWhite)}. Lower the lightness (this is your 600 step; try 35–45%).`);
+
+  if (cDark >= 4.5) pick('ok', `Dark mode: text on the ${d.step} step passes, ${fmt(cDark)}.`);
+  else if (cDark >= 3) pick('warn', `Dark mode: text on the derived 500 step is ${fmt(cDark)}. Fine for short button labels. Use the 600 step for text-heavy buttons.`);
+  else pick('bad', `Dark mode: text on the derived 500 step fails, ${fmt(cDark)}. Lower the lightness or saturation.`);
+
+  if (onWhite < 3) pick('warn', `It is only ${fmt(onWhite)} against white, so outlines and links will be faint. Lower the lightness.`);
+  if (onPage < 3) pick('warn', `The dark-mode version is only ${fmt(onPage)} against your ${g[950]} page. Buttons will sink in. Raise the lightness.`);
+
+  if (!isNearBlackBrand() && s >= 30) {
+    if (hueIn(45, 95)) pick('bad', 'Yellow and lime: white text on them fails contrast at any useful lightness. Pick another hue, or plan for dark text on this button.');
+    if ((h <= 12 || h >= 352) && s >= 50) pick('warn', 'Red is for errors. If your brand is red, use rose (hue 347) and keep red-600 for delete and destructive.');
+  }
+  $('brandChecks').innerHTML = items.map(i => `<li><span class="dot ${i.cls}">${i.cls === 'ok' ? '✓' : i.cls === 'warn' ? '!' : '✕'}</span><span>${esc(i.text)}</span></li>`).join('');
+}
+
+function renderBrandPresets() {
+  $('brandPresets').innerHTML = BRAND_PRESETS.map(gp => `<div class="grp">${esc(gp.group)}</div>` + gp.items.map(([name, hex]) => `<button type="button" data-hex="${hex}"><i style="background:${hex}"></i>${name}</button>`).join('')).join('');
+}
+
 function renderScale(scale) {
   $('scale').innerHTML = scale.map(x => `<div class="st"><div class="sw" style="background:${x.hex}" title="${x.hex}"></div><div class="lbl">${x.step}</div><div class="hex">${x.hex}<br>L ${x.l}</div></div>`).join('');
   const flags = [];
@@ -575,7 +693,7 @@ function previewCard(mode, m) {
       <div class="line" style="border:1px solid ${m.border.hex}">Eggs <span style="color:${m.text2.hex}">border ${m.border.step}</span></div>
       <div class="inp" style="background:${mode === 'dark' ? m.muted.hex : m.page.hex};border:1px solid ${m.border.hex};color:${m.disabled.hex}">Add an item… · placeholder ${m.disabled.step}</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <span class="btn" style="background:${m.brand.hex};color:#ffffff">Add item · brand ${m.brand.step}</span>
+        <span class="btn" style="background:${m.brand.hex};color:${m.brand.fg}">Add item · brand ${m.brand.step}</span>
         <span class="btn" style="background:transparent;border:1px solid ${m.border.hex};color:${m.text.hex}">Cancel</span>
       </div>
     </div>
@@ -632,7 +750,7 @@ function exportCss(j, g) {
   --popover: ${l.card.hex};
   --popover-foreground: ${l.text.hex};
   --primary: ${l.brand.hex};
-  --primary-foreground: #ffffff;
+  --primary-foreground: ${l.brand.fg};
   --secondary: ${l.muted.hex};
   --secondary-foreground: ${g[900]};
   --muted: ${l.muted.hex};
@@ -652,7 +770,7 @@ function exportCss(j, g) {
   --popover: ${d.card.hex};
   --popover-foreground: ${d.text.hex};
   --primary: ${d.brand.hex};
-  --primary-foreground: #ffffff;
+  --primary-foreground: ${d.brand.fg};
   --secondary: ${d.muted.hex};
   --secondary-foreground: ${d.text.hex};
   --muted: ${d.muted.hex};
@@ -706,7 +824,7 @@ Jobs (dark → light):
   disabled         ${j.dark.disabled.hex} → ${j.light.disabled.hex}
   secondary text   ${j.dark.text2.hex} → ${j.light.text2.hex}
   main text        ${j.dark.text.hex} → ${j.light.text.hex}
-  brand            ${j.dark.brand.hex} (500) → ${j.light.brand.hex} (600)
+  brand            ${j.dark.brand.hex} (${j.dark.brand.step}) → ${j.light.brand.hex} (600)
 
 Contrast: ${fails.length ? fails.length + ' pair(s) fail. Fix these first and tell me what you moved:\n' + fails.map(f => `  - ${f.mode}: ${f.name} is ${fmt(f.ratio)}, needs ${f.need}:1. ${f.tip}`).join('\n') : 'all 12 pairs pass. Keep it that way.'}
 
@@ -721,12 +839,14 @@ Do this:
 /* ---------- main render ---------- */
 let current = {};
 function render() {
+  state.brand = state.brandExact || hsl(state.bh, state.bs, state.bl);
   const scale = buildScale();
   const j = jobs(scale);
   const g = byStep(scale);
   const rows = contrastRows(j, g);
   current = { scale, j, g, rows };
   renderControls();
+  renderBrand(j, g);
   renderRuleChecks(scale);
   renderScale(scale);
   $('jobsDark').innerHTML = jobRows(j.dark);
@@ -763,11 +883,16 @@ function load() {
       state.h = clamp(+p.get('h') || 0, 0, 360);
       state.s = clamp(+p.get('s') || 0, 0, 50);
       state.l = clamp(+p.get('l') || 0, 0, 100);
-      if (hexToRgb('#' + (p.get('brand') || ''))) state.brand = '#' + p.get('brand');
+      if (hexToRgb('#' + (p.get('brand') || ''))) { state.brand = '#' + p.get('brand'); state.brandFromHash = true; }
       state.boost = p.get('boost') === '1';
     }
   } catch (e) {}
   if (state.start === 'light') state.lightL = state.l;
+  if (hexToRgb(state.brand) && (state.bh === undefined || state.brandFromHash)) {
+    [state.bh, state.bs, state.bl] = rgbToHsl(hexToRgb(state.brand));
+    state.brandExact = state.brand;
+  }
+  delete state.brandFromHash;
 }
 
 /* ---------- events ---------- */
@@ -786,9 +911,17 @@ $('light').addEventListener('input', e => { state.l = +e.target.value; if (state
 $('boost').addEventListener('change', e => { state.boost = e.target.checked; render(); });
 $('anchorHex').addEventListener('input', e => { if (setAnchorFromHex(e.target.value)) render(); });
 $('anchorHex').addEventListener('blur', render);
-$('brandHex').addEventListener('input', e => { if (hexToRgb(e.target.value)) { state.brand = e.target.value.startsWith('#') ? e.target.value.toLowerCase() : '#' + e.target.value.toLowerCase(); render(); } });
+function setBrandFromHex(hex) { const rgb = hexToRgb(hex); if (!rgb) return false; [state.bh, state.bs, state.bl] = rgbToHsl(rgb); state.brandExact = rgbToHex(rgb); return true; }
+$('brandHex').addEventListener('input', e => { if (setBrandFromHex(e.target.value)) render(); });
 $('brandHex').addEventListener('blur', render);
-$('brandColor').addEventListener('input', e => { state.brand = e.target.value; render(); });
+$('brandColor').addEventListener('input', e => { if (setBrandFromHex(e.target.value)) render(); });
+$('bh').addEventListener('input', e => { state.bh = +e.target.value; state.brandExact = null; render(); });
+$('bs').addEventListener('input', e => { state.bs = +e.target.value; state.brandExact = null; render(); });
+$('bl').addEventListener('input', e => { state.bl = +e.target.value; state.brandExact = null; render(); });
+$('brandPresets').addEventListener('click', e => {
+  const b = e.target.closest('button[data-hex]'); if (!b) return;
+  setBrandFromHex(b.dataset.hex); render();
+});
 $('tintFromBrand').addEventListener('click', () => {
   const rgb = hexToRgb(state.brand); if (!rgb) return;
   const [h, s] = rgbToHsl(rgb);
@@ -837,6 +970,7 @@ $('shareBtn').addEventListener('click', async () => {
 });
 
 load();
+renderBrandPresets();
 renderExamples();
 render();
 </script>
