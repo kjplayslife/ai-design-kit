@@ -26,4 +26,4 @@ The tool re-themes itself with the grays you pick, so you see them in a real lay
 
 ## Adding an example
 
-Open `examples/examples.js`, copy a block, and fill in five hexes for dark (page, card, border, secondary text, text) and optionally five for light (page, muted, border, secondary text, text). Sample them from the live site with a color picker. Close is fine.
+Open `examples/examples.js`, copy a block, and fill in five hexes for dark (page, card, border, secondary text, text) and optionally five for light (page, muted, border, secondary text, text). Add a `brand` block with the accent hex and a note on how the site uses it. Sample them from a screenshot with a color picker. Close is fine. The screenshots behind the current examples are in [grey examples from popular sites](../../grey%20examples%20from%20popular%20sites/).

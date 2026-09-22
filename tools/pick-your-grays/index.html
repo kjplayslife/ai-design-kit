@@ -149,6 +149,7 @@
   .ex .k { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; font-size: 10px; color: var(--text2); text-align: center; }
   .ex .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .ex .head b { font-weight: 600; }
+  .ex .bdot { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--border); margin-top: 2px; }
 
   /* export */
   .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -350,7 +351,7 @@
   <!-- EXAMPLES -->
   <section>
     <div class="step"><span class="n">Real examples</span><h2>How popular apps do it</h2></div>
-    <p class="muted">Same jobs, every time. Nobody uses pure mid-gray: GitHub leans blue, Material leans violet, Notion leans warm. Discord skips near-black and lifts the whole page. Apple uses true black and pays for it with three gray layers. Values are sampled from public design systems and UI; close, not exact. Click one to start from its page color.</p>
+    <p class="muted">Same jobs, every time. Nobody uses pure mid-gray: Supabase leans green, GitHub leans blue, Claude leans warm. Lovable and Discord skip near-black and lift the whole page. Vercel and Apple use true black and pay for it with extra gray layers. Values are sampled from screenshots and public design systems; close, not exact. “Start from this” loads the page color into Step 2; “Use brand” loads the accent into Step 1.</p>
     <div class="examples" id="examples"></div>
   </section>
 
@@ -705,15 +706,21 @@ function renderExamples() {
   $('examples').innerHTML = list.map((e, i) => {
     const d = e.dark, l = e.light;
     const strip = (o, keys, cls) => `<div class="strip ${cls}">${keys.map(k => `<i style="background:${o[k]}" title="${k} ${o[k]}"></i>`).join('')}</div>`;
-    const [h, s, li] = rgbToHsl(hexToRgb(d.page));
+    const anchor = d ? d.page : l.text;
+    const [h, s, li] = rgbToHsl(hexToRgb(anchor));
+    const b = e.brand;
     return `<div class="card ex">
       <div class="head"><b>${esc(e.name)}</b><span class="xs muted">${esc(e.tint)}</span></div>
-      ${strip(d, ['page', 'card', 'border', 'secondaryText', 'text'], 'dark')}
-      <div class="k"><span>page</span><span>card</span><span>border</span><span>2nd text</span><span>text</span></div>
+      ${d ? strip(d, ['page', 'card', 'border', 'secondaryText', 'text'], 'dark') + '<div class="k"><span>page</span><span>card</span><span>border</span><span>2nd text</span><span>text</span></div>' : '<div class="xs muted">dark mode not sampled</div>'}
       ${l ? strip(l, ['page', 'muted', 'border', 'secondaryText', 'text'], 'light') + '<div class="k"><span>page</span><span>muted</span><span>border</span><span>2nd text</span><span>text</span></div>' : '<div class="xs muted">light mode not sampled</div>'}
+      ${b ? `<div class="row" style="align-items:flex-start;gap:10px"><i class="bdot" style="background:${b.hex}"></i><div class="xs"><span class="mono">brand ${b.hex}</span> <span class="muted">· ${esc(b.note || '')}</span></div></div>` : ''}
+      ${e.notes ? `<div class="xs muted">${esc(e.notes)}</div>` : ''}
       <div class="row" style="justify-content:space-between">
-        <span class="xs mono muted">page ${d.page} · H${h} S${s} L${li} · text on page ${fmt(contrast(d.text, d.page))}</span>
-        <button type="button" class="sm" data-example="${i}">Start from this</button>
+        <span class="xs mono muted">${d ? 'page' : 'text'} ${anchor} · H${h} S${s} L${li}${d ? ' · text on page ' + fmt(contrast(d.text, d.page)) : ''}</span>
+        <span class="row">
+          ${b ? `<button type="button" class="sm" data-brand="${b.hex}">Use brand</button>` : ''}
+          <button type="button" class="sm" data-example="${i}">Start from this</button>
+        </span>
       </div>
     </div>`;
   }).join('');
@@ -952,13 +959,26 @@ $('exportTabs').addEventListener('click', e => {
   state.tab = b.dataset.tab; renderControls(); renderExport(); save();
 });
 $('examples').addEventListener('click', e => {
+  const bb = e.target.closest('button[data-brand]');
+  if (bb) {
+    setBrandFromHex(bb.dataset.brand); render();
+    document.getElementById('brandPresets').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    toast(`Brand set to ${bb.dataset.brand}`);
+    return;
+  }
   const b = e.target.closest('button[data-example]'); if (!b) return;
   const ex = window.GRAY_EXAMPLES[+b.dataset.example];
-  state.start = 'dark';
-  setAnchorFromHex(ex.dark.page);
+  if (ex.dark) {
+    state.start = 'dark';
+    setAnchorFromHex(ex.dark.page);
+  } else {
+    // light-only example: start from its main text color, which is the 950 step
+    state.start = 'dark';
+    setAnchorFromHex(ex.light.text);
+  }
   render();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  toast(`Starting from ${ex.name}'s page color`);
+  document.getElementById('anchorHex').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  toast(`Starting from ${ex.name}'s ${ex.dark ? 'page' : 'text'} color`);
 });
 $('copyBtn').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText($('exportOut').value); toast('Copied'); }
