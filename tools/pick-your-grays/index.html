@@ -134,17 +134,6 @@
   .pv .inp { height: 36px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 14px; }
   .pv .tag { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
 
-  /* light gallery */
-  .gallery { display: grid; gap: 12px; grid-template-columns: 1fr; }
-  @media (min-width: 640px) { .gallery { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 960px) { .gallery { grid-template-columns: 1fr 1fr 1fr; } }
-  .pal { display: grid; gap: 10px; padding: 16px; }
-  .pal .head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .pal .head b { font-weight: 600; font-size: 15px; }
-  .pal .strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
-  .pal .strip i { display: block; height: 40px; border-radius: 4px; border: 1px solid var(--border); }
-  .pal .k { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; font-size: 10px; color: var(--text2); text-align: center; }
-
   /* export */
   .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
   textarea { width: 100%; min-height: 480px; padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; resize: vertical; }
@@ -346,11 +335,6 @@
         </div>
       </div>
       <div id="previewLight"></div>
-      <div>
-        <h3>How popular apps do light mode</h3>
-        <p class="muted small" style="margin:4px 0 12px">For reference only. Page, muted, border, secondary text, main text.</p>
-        <div class="gallery" id="galleryLight"></div>
-      </div>
     </section>
   </div>
 
@@ -553,15 +537,6 @@ function renderStatic() {
       <div class="big" style="background:${e.dark.page}"></div>
       <div><b>${esc(e.name)}</b><span class="meta mono">${e.dark.page} · H${h} S${s} L${l}</span></div>
     </button>`;
-  }).join('');
-  $('galleryLight').innerHTML = EXAMPLES.map(e => {
-    if (!e.light) return '';
-    const l = e.light;
-    return `<div class="card pal">
-      <div class="head"><b>${esc(e.name)}</b><span class="xs muted">${esc(e.tint)}</span></div>
-      <div class="strip">${['page', 'muted', 'border', 'secondaryText', 'text'].map(k => `<i style="background:${l[k]}" title="${k} ${l[k]}"></i>`).join('')}</div>
-      <div class="k"><span>page</span><span>muted</span><span>border</span><span>2nd text</span><span>text</span></div>
-    </div>`;
   }).join('');
   $('brandPick').innerHTML = '<option value="">Choose one…</option>' + EXAMPLES.map((e, i) => e.brand ? `<option value="${i}">${esc(e.name)} · ${e.brand.hex}</option>` : '').join('');
 }
