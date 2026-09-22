@@ -109,3 +109,17 @@ window.GRAY_EXAMPLES = [
     brand: { hex: "#6750a4", note: "Baseline primary purple. Light mode uses it as a fill with white text." },
   },
 ];
+
+// Full 11-step reference scales (950 → 50). These have every step, unlike the
+// screenshots above, which only show the steps each site happened to use.
+// "anchor" is the step the picker loads as your dark background (Rule 1: not #000).
+window.GRAY_SCALES = [
+  { name: "zinc", tint: "neutral (Tailwind)", anchor: "#09090b",
+    steps: ["#09090b", "#18181b", "#27272a", "#3f3f46", "#52525b", "#71717a", "#a1a1aa", "#d4d4d8", "#e4e4e7", "#f4f4f5", "#fafafa"] },
+  { name: "slate", tint: "cool (Tailwind)", anchor: "#020617",
+    steps: ["#020617", "#0f172a", "#1e293b", "#334155", "#475569", "#64748b", "#94a3b8", "#cbd5e1", "#e2e8f0", "#f1f5f9", "#f8fafc"] },
+  { name: "stone", tint: "warm (Tailwind)", anchor: "#0c0a09",
+    steps: ["#0c0a09", "#1c1917", "#292524", "#44403c", "#57534e", "#78716c", "#a8a29e", "#d6d3d1", "#e7e5e4", "#f5f5f4", "#fafaf9"] },
+  { name: "Geist gray", tint: "pure neutral (Vercel, dark)", anchor: "#0a0a0a",
+    steps: ["#000000", "#0a0a0a", "#191919", "#1f1f1f", "#292929", "#2e2e2e", "#454545", "#878787", "#8f8f8f", "#a1a1a1", "#ededed"] },
+];

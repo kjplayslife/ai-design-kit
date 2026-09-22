@@ -4,15 +4,17 @@ Pick one dark gray (or one white). Get the whole neutral scale, the job assignme
 
 ## What it does
 
-1. **Pick your brand color first.** Hue, saturation, and lightness sliders, plus ten safe picks (Tailwind 600 steps). Checks that white text passes on it, that it reads as a color, that it stays visible on both page backgrounds, and warns on red (that's for errors) and yellow or lime (white text never passes). The dark-mode 500 step is derived and checked too; a near-black brand flips to a white button on dark.
-2. **Then your starting gray.** Your dark page background (950) or your light-mode "white" (50). Either way you set a hue, a saturation, and a lightness. One click tints the gray from your brand hue.
-3. **Builds the 11-step scale** using the lightness ladder from the rules. Same hue, same saturation, only lightness changes. Runs the neighbor test.
-4. **Assigns jobs** for dark and light mode, mirroring the jobs, not the hexes.
-5. **Checks contrast** on all 12 text and border pairs, live, and tells you which step to move if one fails.
-6. **Shows real examples** from Vercel, GitHub, Discord, Notion, Apple, and Material so you can see what "tinted gray" looks like in the wild. Click one to use it as a starting point.
-7. **Exports** CSS variables for `globals.css`, a Tailwind v4 `@theme` block, JSON, and a filled-in prompt for your AI agent.
+Dark mode first, then light mode is generated from it.
 
-The tool re-themes itself with the grays you pick, so you see them in a real layout while you work.
+1. **Start from a palette you like.** Dark-mode grays from popular apps (Claude, Claude Code Docs, Vercel, xAI, Supabase, Lovable, GitHub, Discord, Notion, Apple, Material), sampled from screenshots, plus the full 11-step zinc, slate, stone, and Geist scales. Click one to load its page color.
+2. **Dial in your dark gray.** Hue, saturation, page lightness (950), and text lightness (50). Live rule checks: not black, 3–10% saturation, text not pure white, hue matches your brand.
+3. **Pick one brand color, for dark.** Sliders plus a dropdown of popular app accents. Checks that text passes on the button, that it reads as a link on the page, and warns on red and on yellow or lime. Low-saturation brands become a neutral brand (white button on dark, black on light).
+4. **Your scale.** Eleven steps from the lightness ladder, with the neighbor test.
+5. **Dark mode, checked.** Jobs table, six contrast pairs, and a preview card.
+6. **Light mode, generated.** A separate section rendered in light. Brand is derived darker so white text passes; you can nudge it, and switch secondary text (500/600), borders (200/300), and muted fills (100/50). Jobs, six contrast pairs, preview, and the light palettes from popular apps for reference.
+7. **Export** CSS variables for `globals.css`, a Tailwind v4 `@theme` block, JSON, and a filled-in prompt for your AI agent. Share links encode every setting.
+
+The page re-themes itself with what you pick: the top half in your dark mode, the light section in your light mode.
 
 ## Files
 
