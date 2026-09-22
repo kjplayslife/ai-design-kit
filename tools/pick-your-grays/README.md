@@ -12,7 +12,7 @@ Dark mode first, then light mode is generated from it.
 4. **Your scale.** Eleven steps from the lightness ladder, with the neighbor test.
 5. **Dark mode, checked.** Jobs table, six contrast pairs, and a preview card.
 6. **Light mode, generated.** A separate section rendered in light. Brand is derived darker so white text passes; you can nudge it, and switch secondary text (500/600), borders (200/300), and muted fills (100/50). Jobs, six contrast pairs, preview, and the light palettes from popular apps for reference.
-7. **Export** CSS variables for `globals.css`, a Tailwind v4 `@theme` block, JSON, and a filled-in prompt for your AI agent. Share links encode every setting.
+7. **Prompt for your agent.** One output: a prompt that carries every hex, the jobs, and the rules, and tells the agent exactly where to put them. A switch picks the stack: plain HTML + CSS (custom properties with a data-theme toggle) or React + Tailwind v4 + shadcn (globals.css job tokens). Share links encode every setting.
 
 The page re-themes itself with what you pick: the top half in your dark mode, the light section in your light mode.
 

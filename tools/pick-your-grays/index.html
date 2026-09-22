@@ -147,7 +147,7 @@
 
   /* export */
   .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
-  textarea { width: 100%; min-height: 320px; padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; resize: vertical; }
+  textarea { width: 100%; min-height: 480px; padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; resize: vertical; }
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #fafafa; color: #09090b; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; }
   .toast.show { opacity: 1; }
   footer { border-top: 1px solid var(--border); padding-top: 24px; font-size: 14px; color: var(--text2); }
@@ -340,21 +340,23 @@
 
   <!-- EXPORT -->
   <section>
-    <div class="step"><span class="n">Export</span><h2>Paste it into your project</h2></div>
+    <div class="step"><span class="n">Export</span><h2>Prompt for your agent</h2></div>
+    <p class="muted">Copy this and paste it at the top of your chat with Claude, Cursor, Lovable, or whatever is building your UI. It carries every hex above, the jobs, and the rules, and it tells the agent exactly where to put them.</p>
     <div class="card" style="display:grid;gap:12px">
       <div class="row" style="justify-content:space-between">
-        <div class="tabs" id="exportTabs">
-          <button type="button" class="sm" data-tab="css" aria-pressed="true">globals.css</button>
-          <button type="button" class="sm" data-tab="tailwind" aria-pressed="false">Tailwind @theme</button>
-          <button type="button" class="sm" data-tab="json" aria-pressed="false">JSON</button>
-          <button type="button" class="sm" data-tab="prompt" aria-pressed="false">Prompt for your agent</button>
+        <div class="field" style="gap:4px">
+          <label style="margin:0">What are you building with?</label>
+          <div class="seg" id="stackSeg">
+            <button type="button" data-v="html">Plain HTML + CSS</button>
+            <button type="button" data-v="tailwind">React + Tailwind (shadcn)</button>
+          </div>
         </div>
         <div class="row">
           <button type="button" class="sm" id="shareBtn">Copy share link</button>
-          <button type="button" class="sm primary" id="copyBtn">Copy</button>
+          <button type="button" class="sm primary" id="copyBtn">Copy prompt</button>
         </div>
       </div>
-      <textarea id="exportOut" readonly spellcheck="false" aria-label="Export output"></textarea>
+      <textarea id="exportOut" readonly spellcheck="false" aria-label="Prompt for your agent"></textarea>
     </div>
   </section>
 
@@ -429,7 +431,7 @@ const state = {
   h: 240, s: 8, l: 7, ov: {},            // ov: per-step lightness overrides, index -> L
   bh: 221, bs: 83, bl: 53, brandExact: '#2563eb', brand: '#2563eb',
   lbAdj: 0, lText2: '11', lBorder: '6', lMuted: '3',
-  source: '', open: null, tab: 'css',
+  source: '', open: null, stack: 'tailwind',
 };
 
 function buildDark() {
@@ -556,7 +558,7 @@ function renderControls() {
   $('lbAdj').value = state.lbAdj; $('lbAdjVal').textContent = (state.lbAdj > 0 ? '+' : '') + state.lbAdj;
   [['lText2Seg', 'lText2'], ['lBorderSeg', 'lBorder'], ['lMutedSeg', 'lMuted']].forEach(([id, key]) =>
     document.querySelectorAll('#' + id + ' button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state[key])));
-  document.querySelectorAll('#exportTabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.tab === state.tab));
+  document.querySelectorAll('#stackSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.stack));
 }
 
 function renderRuleChecks(D) {
@@ -695,87 +697,102 @@ function themePage(j) {
   set($('lightZone'), j.light, true);
 }
 
-/* ---------- exports ---------- */
-function exportCss(j) {
+/* ---------- the prompt ---------- */
+function tokenLines(m) {
+  return [
+    ['--background', m.page.hex], ['--foreground', m.text.hex],
+    ['--card', m.card.hex], ['--card-foreground', m.text.hex],
+    ['--popover', m.card.hex], ['--popover-foreground', m.text.hex],
+    ['--primary', m.brand.hex], ['--primary-foreground', m.brand.fg],
+    ['--secondary', m.muted.hex], ['--secondary-foreground', m.text.hex],
+    ['--muted', m.muted.hex], ['--muted-foreground', m.text2.hex],
+    ['--accent', m.hover.hex], ['--accent-foreground', m.text.hex],
+    ['--border', m.border.hex], ['--input', m.border2.hex], ['--ring', m.brand.hex],
+  ];
+}
+function exportPrompt(D, Lt, j, rows) {
   const d = j.dark, l = j.light;
-  const block = (m) => `  --background: ${m.page.hex};
-  --foreground: ${m.text.hex};
-  --card: ${m.card.hex};
-  --card-foreground: ${m.text.hex};
-  --popover: ${m.card.hex};
-  --popover-foreground: ${m.text.hex};
-  --primary: ${m.brand.hex};
-  --primary-foreground: ${m.brand.fg};
-  --secondary: ${m.muted.hex};
-  --secondary-foreground: ${m.text.hex};
-  --muted: ${m.muted.hex};
-  --muted-foreground: ${m.text2.hex};
-  --accent: ${m.hover.hex};
-  --accent-foreground: ${m.text.hex};
-  --border: ${m.border.hex};
-  --input: ${m.border2.hex};
-  --ring: ${m.brand.hex};`;
-  return `/* Pick Your Grays — paste over the matching lines in globals.css
-   Gray: hue ${state.h}° · saturation ${state.s}% · dark page ${d.page.hex} · dark text ${d.text.hex}
-   Brand: ${d.brand.hex} (dark) · ${l.brand.hex} (light) */
+  const fails = [...rows.dark.map(r => ({ ...r, mode: 'Dark' })), ...rows.light.map(r => ({ ...r, mode: 'Light' }))].filter(r => r.ratio < r.need);
+  const block = m => tokenLines(m).map(([k, v]) => `  ${k}: ${v};`).join('\n');
+  const scaleList = (S) => S.map((x, i) => `  ${String(x.n).padStart(2)}: ${x.hex}  ${JOBS12[i][0]}`).join('\n');
+  const head = `You are setting up the color system for my app. Use these exact values. Do not invent, adjust, or "improve" any of them.
+
+MY GRAY
+  hue ${state.h}°, saturation ${state.s}%. Dark page ${D[0].hex}, dark text ${D[11].hex}.
+MY BRAND
+  ${d.brand.hex} on dark (text on it: ${d.brand.fg}) · ${l.brand.hex} on light (text on it: ${l.brand.fg})
+
+DARK SCALE, 12 steps (1 = page … 12 = text). Lighter = closer to the viewer.
+${scaleList(D)}
+
+LIGHT SCALE, 12 steps
+${scaleList(Lt)}
+
+JOBS (dark → light)
+  page background   ${d.page.hex} → ${l.page.hex}
+  card / panel      ${d.card.hex} → ${l.card.hex}
+  inputs, rows      ${d.muted.hex} → ${l.muted.hex}
+  hover fill        ${d.hover.hex} → ${l.hover.hex}
+  border / divider  ${d.border.hex} → ${l.border.hex}
+  input border      ${d.border2.hex} → ${l.border2.hex}
+  focus ring        ${d.ring.hex} → ${l.ring.hex}
+  secondary text    ${d.text2.hex} → ${l.text2.hex}
+  main text         ${d.text.hex} → ${l.text.hex}
+  brand             ${d.brand.hex} → ${l.brand.hex}
+
+CONTRAST
+  ${fails.length ? fails.length + ' pair(s) are below target. Fix these first, by moving a step, and tell me which one you moved:\n' + fails.map(f => `  - ${f.mode}: ${f.name} is ${fmt(f.ratio)}, needs ${f.need}:1. ${f.tip}`).join('\n') : 'All 12 text and border pairs pass. Keep it that way: never lower text opacity, never use a lighter gray for text than the ones listed.'}
+
+RULES THAT ALWAYS APPLY
+  1. Every color in the app comes from these tokens. No raw hex, no rgb(), no named colors, no Tailwind palette colors anywhere in components.
+  2. One job per token. Backgrounds use the background/card/muted tokens, text uses the foreground tokens, lines use border. Don't use a text color as a background or vice versa.
+  3. Dark mode has no shadows. Depth is card (${d.card.hex}) on page (${d.page.hex}) with a ${d.border.hex} border. Light mode cards are white with a border and a small shadow.
+  4. Brand is for one primary action per screen, links, and focus. About 10% of the screen. Everything else is gray.
+  5. Text on the brand button is ${d.brand.fg} on dark and ${l.brand.fg} on light, never the brand color on itself.
+  6. Status colors (success, warning, error) are separate and small: text and icons only, never big fills.
+`;
+
+  if (state.stack === 'html') {
+    return head + `
+DO THIS (plain HTML + CSS)
+  1. Create styles.css (or the top of my existing stylesheet) with exactly this. Dark is the default; light applies when <html data-theme="light"> is set or the OS prefers light:
+
+:root {
+${block(d)}
+  --shadow-sm: none;
+  --radius: 8px;
+}
+:root[data-theme="light"] {
+${block(l)}
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / .05);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+${block(l).replace(/^/gm, '  ')}
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / .05);
+  }
+}
+body { background: var(--background); color: var(--foreground); }
+
+  2. Style everything with var(--token). Cards: background var(--card), border 1px solid var(--border), box-shadow var(--shadow-sm). Inputs: background var(--muted), border 1px solid var(--input). Buttons: background var(--primary), color var(--primary-foreground). Helper text: color var(--muted-foreground). Focus: outline 2px solid var(--ring).
+  3. Add a small theme toggle that sets data-theme="light" or "dark" on <html> and remembers it in localStorage.
+  4. When you're done, search the CSS and HTML for "#" followed by 3 or 6 hex characters, "rgb(", and any color word. The only hits allowed are inside the :root blocks above. Report what you found.
+`;
+  }
+  return head + `
+DO THIS (React + Tailwind v4 + shadcn/ui)
+  1. In globals.css, replace the color values under :root (light) and .dark (dark) with exactly these. Keep the existing variable names and the @theme inline block that maps them to Tailwind; do not add new variable names.
 
 :root {
 ${block(l)}
 }
-
 .dark {
 ${block(d)}
 }
-`;
-}
-function exportTailwind(D, Lt) {
-  return `/* Tailwind CSS v4 — the full 12-step scales as bg-gray-1 … bg-gray-12 (dark) and bg-graylight-1 … 12.
-   Prefer the job tokens in globals.css for app code; use these for one-offs and charts. */
-@theme {
-${D.map(x => `  --color-gray-${x.n}: ${x.hex};`).join('\n')}
-${Lt.map(x => `  --color-graylight-${x.n}: ${x.hex};`).join('\n')}
-}
-`;
-}
-function exportJson(D, Lt, j) {
-  return JSON.stringify({
-    source: { gray: { hue: state.h, saturation: state.s, lightness: state.l, overrides: state.ov }, brand: { dark: state.brand, lightAdjust: state.lbAdj }, light: { secondaryText: +state.lText2, border: +state.lBorder, muted: +state.lMuted } },
-    dark: Object.fromEntries(D.map(x => [x.n, x.hex])),
-    light: Object.fromEntries(Lt.map(x => [x.n, x.hex])),
-    jobs: { dark: Object.fromEntries(Object.entries(j.dark).map(([k, v]) => [k, v.hex])), light: Object.fromEntries(Object.entries(j.light).map(([k, v]) => [k, v.hex])) },
-  }, null, 2) + '\n';
-}
-function exportPrompt(D, Lt, j, rows) {
-  const fails = [...rows.dark.map(r => ({ ...r, mode: 'Dark' })), ...rows.light.map(r => ({ ...r, mode: 'Light' }))].filter(r => r.ratio < r.need);
-  return `Read RULES.md (Pick Your Grays) and follow every rule in it.
 
-My gray: hue ${state.h}°, saturation ${state.s}%. Dark page is ${D[0].hex}. Dark text is ${D[11].hex}.
-My brand color on dark is ${j.dark.brand.hex}. On light it is ${j.light.brand.hex}.
-
-I already built the scales. Use these exact hexes, do not regenerate them.
-Dark, 12 steps (1 = page … 12 = text):
-${D.map((x, i) => `  ${String(x.n).padStart(2)}: ${x.hex}  ${JOBS12[i][0]}`).join('\n')}
-Light, 12 steps:
-${Lt.map((x, i) => `  ${String(x.n).padStart(2)}: ${x.hex}  ${JOBS12[i][0]}`).join('\n')}
-
-Jobs (dark → light):
-  page background  ${j.dark.page.hex} → ${j.light.page.hex}
-  card / panel     ${j.dark.card.hex} → ${j.light.card.hex}
-  inputs, rows     ${j.dark.muted.hex} → ${j.light.muted.hex}
-  hover fill       ${j.dark.hover.hex} → ${j.light.hover.hex}
-  border           ${j.dark.border.hex} → ${j.light.border.hex}
-  input border     ${j.dark.border2.hex} → ${j.light.border2.hex}
-  secondary text   ${j.dark.text2.hex} → ${j.light.text2.hex}
-  main text        ${j.dark.text.hex} → ${j.light.text.hex}
-  brand            ${j.dark.brand.hex} (text ${j.dark.brand.fg}) → ${j.light.brand.hex} (text ${j.light.brand.fg})
-
-Contrast: ${fails.length ? fails.length + ' pair(s) fail. Fix these first and tell me what you moved:\n' + fails.map(f => `  - ${f.mode}: ${f.name} is ${fmt(f.ratio)}, needs ${f.need}:1. ${f.tip}`).join('\n') : 'all 12 pairs pass. Keep it that way.'}
-
-Do this:
-1. Write these into globals.css as CSS variables under :root (light) and .dark (dark), using only the job names already in that file (--background, --foreground, --card, --card-foreground, --primary, --primary-foreground, --secondary, --muted, --muted-foreground, --accent, --border, --input, --ring). Do not add new variable names.
-2. Never use raw hex or raw Tailwind colors (bg-zinc-900, text-gray-500) anywhere else in the app. Job tokens only.
-3. Dark mode gets no shadows; depth is step 2 on step 1 with a step 6 border. Light mode cards are white with a border and shadow-sm.
-4. Report the exact lines you changed.
+  2. Use shadcn components from @/components/ui and the job classes only: bg-background, text-foreground, bg-card, bg-muted, text-muted-foreground, bg-primary, text-primary-foreground, bg-accent (hover), border-border, ring-ring. Never bg-zinc-900, text-gray-500, or an arbitrary value like bg-[#111].
+  3. Dark mode is the class strategy: add class="dark" on <html>. Cards get no shadow in dark; in light, shadow-sm.
+  4. When you're done, grep the app (excluding globals.css and components/ui) for: bg-[a-z]+-[0-9], text-[a-z]+-[0-9], border-[a-z]+-[0-9], #[0-9a-f]{3,6}, and style={{. Every hit is a bug. Fix them and report what you changed.
 `;
 }
 
@@ -802,7 +819,7 @@ function render() {
 }
 function renderExport() {
   const { D, Lt, j, rows } = current;
-  $('exportOut').value = state.tab === 'css' ? exportCss(j) : state.tab === 'tailwind' ? exportTailwind(D, Lt) : state.tab === 'json' ? exportJson(D, Lt, j) : exportPrompt(D, Lt, j, rows);
+  $('exportOut').value = exportPrompt(D, Lt, j, rows);
 }
 
 /* ---------- persistence ---------- */
@@ -811,7 +828,7 @@ function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
   try {
     const ov = Object.entries(state.ov).map(([k, v]) => k + ':' + v).join(',');
-    const p = new URLSearchParams({ h: state.h, s: state.s, l: state.l, ov, brand: state.brand.replace('#', ''), lb: state.lbAdj, t2: state.lText2, bd: state.lBorder, mu: state.lMuted });
+    const p = new URLSearchParams({ h: state.h, s: state.s, l: state.l, ov, brand: state.brand.replace('#', ''), lb: state.lbAdj, t2: state.lText2, bd: state.lBorder, mu: state.lMuted, stack: state.stack });
     history.replaceState(null, '', '#' + p.toString());
   } catch (e) {}
 }
@@ -829,6 +846,7 @@ function load() {
       if (['11', '10'].includes(p.get('t2'))) state.lText2 = p.get('t2');
       if (['6', '7'].includes(p.get('bd'))) state.lBorder = p.get('bd');
       if (['3', '2'].includes(p.get('mu'))) state.lMuted = p.get('mu');
+      if (['html', 'tailwind'].includes(p.get('stack'))) state.stack = p.get('stack');
     }
   } catch (e) {}
 }
@@ -893,8 +911,8 @@ on('tintFromBrand', 'click', () => {
 on('lbAdj', 'input', e => { state.lbAdj = +e.target.value; render(); });
 [['lText2Seg', 'lText2'], ['lBorderSeg', 'lBorder'], ['lMutedSeg', 'lMuted']].forEach(([id, key]) =>
   on(id, 'click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; state[key] = b.dataset.v; render(); }));
-on('exportTabs', 'click', e => { const b = e.target.closest('button[data-tab]'); if (!b) return; state.tab = b.dataset.tab; renderControls(); renderExport(); save(); });
-on('copyBtn', 'click', async () => { try { await navigator.clipboard.writeText($('exportOut').value); toast('Copied'); } catch (e) { $('exportOut').select(); toast('Select all and copy'); } });
+on('stackSeg', 'click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; state.stack = b.dataset.v; renderControls(); renderExport(); save(); });
+on('copyBtn', 'click', async () => { try { await navigator.clipboard.writeText($('exportOut').value); toast('Prompt copied'); } catch (e) { $('exportOut').select(); toast('Select all and copy'); } });
 on('shareBtn', 'click', async () => { try { await navigator.clipboard.writeText(location.href); toast('Link copied'); } catch (e) { toast('Copy the URL from the address bar'); } });
 
 load();
