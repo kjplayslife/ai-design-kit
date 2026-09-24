@@ -10,7 +10,10 @@ This is not an app. It's a set of things you paste into an AI chat, or open in a
 
 | Folder | What it's for |
 |---|---|
+| [tools/design-starter/](tools/design-starter/) | **Start here.** Three picks (primary + gray, font + ratio + corners) across three pages, then one prompt with every token, fourteen rules, and exact placement for plain CSS or Tailwind v4 + shadcn. |
+| [tools/pick-your-colors/](tools/pick-your-colors/) | Pick one primary color and one gray. Get both 11-step scales, fixed status colors, every light and dark token with contrast checked, and a prompt that wires it into plain CSS or Tailwind v4 + shadcn. Standalone piece of the starter. |
 | [tools/pick-your-grays/](tools/pick-your-grays/) | Pick one dark gray or one white, get the full neutral scale, job assignments for both modes, 12 contrast checks, and a `globals.css` snippet. Open `index.html`. |
+| [tools/pick-your-type/](tools/pick-your-type/) | Pick one font and one ratio. Get a heading scale on the 4px grid, four body sizes, line heights, weights, a mobile version, and a prompt that wires it into plain CSS or Tailwind v4 + shadcn. Standalone piece of the starter. |
 
 ## How to use it
 
@@ -21,10 +24,11 @@ This is not an app. It's a set of things you paste into an AI chat, or open in a
 
 ## Roadmap
 
-- [ ] Design starter (a DESIGN.md + globals.css you drop into a project; coming back later)
-- [x] Pick Your Grays
+- [x] Design Starter (colors + type + corners → one prompt)
+- [x] Pick Your Colors (primary + gray, two decisions; replaces Pick Your Grays)
+- [x] Pick Your Grays (kept for reference)
 - [x] Pick your brand color (folded into Pick Your Grays as Step 1)
-- [ ] Type scale picker
+- [x] Pick Your Type (font + ratio)
 - [ ] More real-world dark-mode examples
 
 ## Contributing examples

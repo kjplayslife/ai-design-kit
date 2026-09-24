@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pick Your Colors</title>
+<meta name="description" content="Pick one primary color and one gray. Get both scales, fixed status colors, every light and dark token, and a prompt that wires it into your app.">
+<style>
+  :root {
+    /* light gray chrome so both the light and the dark example stand off the page */
+    --bg: #ececee; --card: #ffffff; --muted: #f4f4f5; --hover: #e4e4e7; --border: #d9d9dd; --border2: #c8c8cd;
+    --text: #09090b; --text2: #52525b;
+    --brand: #2563eb; --brand-fg: #ffffff;
+    --ok: #16a34a; --warn: #d97706; --bad: #dc2626;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+  h1, h2, h3 { margin: 0; letter-spacing: -0.02em; font-weight: 600; line-height: 1.15; }
+  h1 { font-size: 40px; }
+  h2 { font-size: 24px; }
+  p { margin: 0; max-width: 65ch; }
+  .muted { color: var(--text2); }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 96px; display: grid; gap: 36px; }
+  @media (max-width: 640px) { .page { padding: 24px 16px 64px; gap: 32px; } h1 { font-size: 32px; } }
+  section { display: grid; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+
+  /* controls */
+  label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .field { display: grid; gap: 8px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  input[type="text"] { height: 40px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border2); background: var(--muted); color: var(--text); font: inherit; font-size: 14px; width: 100%; }
+  input.hex { width: 120px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+  input[type="text"]:focus-visible, button:focus-visible, input[type="color"]:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  input[type="color"] { width: 40px; height: 40px; padding: 0; border: 1px solid var(--border2); border-radius: 6px; background: none; cursor: pointer; }
+  .hint { font-size: 12px; color: var(--text2); }
+  button { height: 40px; padding: 0 16px; border-radius: 6px; border: 1px solid var(--border2); background: var(--muted); color: var(--text); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+  button:hover { background: var(--hover); }
+  button.primary { background: var(--brand); color: var(--brand-fg); border-color: transparent; }
+  button.primary:hover { filter: brightness(1.08); }
+  button.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+  .seg { display: inline-flex; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; flex-wrap: wrap; }
+  .seg button { border: 0; border-radius: 0; height: auto; min-height: 36px; padding: 6px 12px; line-height: 1.2; background: var(--card); }
+  .seg button + button { border-left: 1px solid var(--border2); }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+
+  /* pick block */
+  .pick { gap: 14px; }
+  .two { display: grid; gap: 24px; grid-template-columns: 1fr; }
+  @media (min-width: 800px) { .two { grid-template-columns: 1fr 1fr; gap: 40px; } }
+  .sw-row { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .swb { display: grid; justify-items: center; gap: 4px; height: auto; padding: 6px 4px; background: none; border: 0; border-radius: 8px; min-width: 56px; }
+  .swb:hover { background: var(--card); }
+  .swb i { display: block; width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border2); box-shadow: 0 0 0 2px transparent; }
+  .swb span { font-size: 11px; color: var(--text2); line-height: 1.2; }
+  .swb[aria-pressed="true"] i { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--text); }
+  .swb[aria-pressed="true"] span { color: var(--text); }
+
+  /* checks */
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+  .checks li { display: flex; gap: 10px; align-items: flex-start; }
+  .dot { flex: none; width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 600; margin-top: 3px; color: #fff; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+
+  /* preview */
+  .pv-wrap { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 800px) { .pv-wrap { grid-template-columns: 1fr 1fr; } }
+  .pv { padding: 24px; border-radius: var(--radius); display: grid; gap: 14px; border: 1px solid; }
+  .pv .pcard { padding: 18px; border-radius: 8px; display: grid; gap: 12px; border: 1px solid; }
+  .pv .line { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 6px; font-size: 14px; }
+  .pv .btn { height: 36px; padding: 0 14px; border-radius: 6px; border: 0; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; width: max-content; }
+  .pv .inp { height: 36px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; font-size: 14px; border: 1px solid; }
+  .pv .badge { font-size: 12px; font-weight: 500; padding: 2px 8px; border-radius: 999px; display: inline-block; }
+  .pv .tag { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
+
+  /* scales */
+  .scale-row { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .scale-row:last-child { border-bottom: 0; }
+  .scale-row b { font-weight: 600; font-size: 14px; display: block; }
+  .scale-row .sub { font-size: 11px; color: var(--text2); }
+  .strip { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; }
+  .strip .st { display: grid; gap: 4px; justify-items: center; }
+  .strip .st i { display: block; width: 100%; height: 40px; border-radius: 6px; border: 1px solid var(--border); }
+  .strip .st.anchor i { outline: 2px solid var(--text); outline-offset: 2px; }
+  .strip .st span { font-size: 10px; color: var(--text2); font-family: ui-monospace, Menlo, monospace; text-align: center; line-height: 1.3; }
+  @media (max-width: 720px) { .scale-row { grid-template-columns: 1fr; gap: 6px; } .strip .st span .hx { display: none; } }
+
+  /* export */
+  textarea { width: 100%; min-height: 480px; padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--muted); color: var(--text); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; resize: vertical; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #09090b; color: #fafafa; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; }
+  .toast.show { opacity: 1; }
+  footer { border-top: 1px solid var(--border); padding-top: 24px; font-size: 14px; color: var(--text2); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Pick Your Colors</h1>
+  </header>
+
+  <!-- PRIMARY + GRAY -->
+  <section class="pick">
+    <div class="two">
+      <div class="field">
+        <label style="margin:0">Primary</label>
+        <div class="row">
+          <input type="color" id="pColor" aria-label="Primary color">
+          <input type="text" class="hex" id="pHex" spellcheck="false" aria-label="Primary hex">
+        </div>
+        <div class="sw-row" id="brandSw"></div>
+      </div>
+      <div class="field">
+        <label style="margin:0">Gray</label>
+        <div class="row">
+          <input type="color" id="gColor" aria-label="Gray color">
+          <input type="text" class="hex" id="gHex" spellcheck="false" placeholder="any dark gray" aria-label="Gray hex">
+        </div>
+        <div class="sw-row" id="graySw"></div>
+      </div>
+    </div>
+    <div class="hint" id="note">One primary, one gray. Everything else is generated: eleven steps of each, fixed status colors, and every light and dark token.</div>
+    <ul class="checks" id="checks" hidden></ul>
+  </section>
+
+  <!-- IN CONTEXT -->
+  <section>
+    <h2>In context</h2>
+    <div class="pv-wrap">
+      <div class="pv" id="pvLight"></div>
+      <div class="pv" id="pvDark"></div>
+    </div>
+  </section>
+
+  <!-- SCALES -->
+  <section>
+    <h2>Your scales</h2>
+    <div class="card"><div id="scales"></div></div>
+    <div class="hint">The outlined step is the color you picked; the rest are generated from it. Status colors are fixed on purpose: red means error everywhere on the internet, so there is nothing to decide.</div>
+  </section>
+
+  <!-- EXPORT -->
+  <section>
+    <h2>Prompt for your agent</h2>
+    <div class="card" style="display:grid;gap:12px">
+      <div class="row" style="justify-content:space-between">
+        <div class="field" style="gap:4px">
+          <label style="margin:0">What are you building with?</label>
+          <div class="seg" id="stackSeg">
+            <button type="button" data-v="html">Plain HTML + CSS</button>
+            <button type="button" data-v="tailwind">React + Tailwind (shadcn)</button>
+          </div>
+        </div>
+        <div class="row">
+          <button type="button" class="sm" id="shareBtn">Copy share link</button>
+          <button type="button" class="sm primary" id="copyBtn">Copy prompt</button>
+        </div>
+      </div>
+      <textarea id="exportOut" readonly spellcheck="false" aria-label="Prompt for your agent"></textarea>
+    </div>
+  </section>
+
+  <footer>
+    Rules: every color is a token · one job per token · primary is 10% of the screen · status colors mean status · no shadows on dark · text on a fill is the listed foreground · never use scale steps directly.
+    &nbsp;·&nbsp; <a href="RULES.md">Rules</a> &nbsp;·&nbsp; <a href="PROMPT.md">Prompt</a> &nbsp;·&nbsp; <a href="../pick-your-type/">Pick Your Type</a>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+/* ---------- color math (sRGB <-> OKLCH) ---------- */
+function hexToRgb(hex) { const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim()); if (!m) return null; const n = parseInt(m[1], 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+const rgbToHex = ([r, g, b]) => '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+const srgbToLin = c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+const linToSrgb = c => c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+function hexToOklch(hex) {
+  const [r, g, b] = hexToRgb(hex).map(v => srgbToLin(v / 255));
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+  const a = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+  const bb = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+  let H = Math.atan2(bb, a) * 180 / Math.PI; if (H < 0) H += 360;
+  return { L, C: Math.hypot(a, bb), H };
+}
+function oklchToLin(L, C, H) {
+  const a = C * Math.cos(H * Math.PI / 180), b = C * Math.sin(H * Math.PI / 180);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.2914855480 * b) ** 3;
+  return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s];
+}
+function oklchToHex(L, C, H) {
+  const inGamut = v => v.every(x => x >= -0.0005 && x <= 1.0005);
+  let rgb = oklchToLin(L, C, H);
+  if (!inGamut(rgb)) { let lo = 0, hi = C; for (let i = 0; i < 24; i++) { const mid = (lo + hi) / 2; if (inGamut(oklchToLin(L, mid, H))) lo = mid; else hi = mid; } rgb = oklchToLin(L, lo, H); }
+  return rgbToHex(rgb.map(v => Math.round(clamp(linToSrgb(clamp(v, 0, 1)), 0, 1) * 255)));
+}
+function lum(hex) { const [r, g, b] = hexToRgb(hex).map(v => srgbToLin(v / 255)); return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+function contrast(a, b) { const x = lum(a), y = lum(b); const [hi, lo] = x > y ? [x, y] : [y, x]; return (hi + 0.05) / (lo + 0.05); }
+const fmt = r => Math.round(r * 10) / 10;
+
+/* ---------- data ---------- */
+const APPS = [
+  { name: 'Claude', gray: '#151515', brand: '#cc7c5e' },
+  { name: 'Vercel', gray: '#0a0a0a', brand: '#0070f3' },
+  { name: 'xAI', gray: '#0a0a0a', brand: '#ed6e30' },
+  { name: 'Supabase', gray: '#131413', brand: '#29613d' },
+  { name: 'Lovable', gray: '#1d1d1c', brand: '#874ef6' },
+  { name: 'GitHub', gray: '#0d1117', brand: '#238636' },
+  { name: 'Discord', gray: '#313338', brand: '#5865f2' },
+  { name: 'Notion', gray: '#191919', brand: '#2383e2' },
+  { name: 'Apple', gray: '#1c1c1e', brand: '#007aff' },
+  { name: 'Material', gray: '#141218', brand: '#6750a4' },
+];
+const GRAYS = [
+  { id: 'primary', name: 'From primary' },
+  { id: 'pure', name: 'Pure' },
+  { id: 'zinc', name: 'Zinc', hex: '#18181b' },
+  { id: 'slate', name: 'Slate', hex: '#1e293b' },
+  { id: 'stone', name: 'Stone', hex: '#1c1917' },
+  ...APPS.map(a => ({ id: 'app:' + a.name, name: a.name, hex: a.gray })),
+];
+const STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
+const CHROMA_L = [0.97, 0.93, 0.87, 0.79, 0.70, 0.62, 0.54, 0.46, 0.39, 0.32, 0.25];
+const CHROMA_F = [0.15, 0.30, 0.50, 0.72, 0.90, 1.00, 0.97, 0.88, 0.75, 0.60, 0.45];
+const NEUTRAL_L = [0.985, 0.967, 0.92, 0.87, 0.71, 0.53, 0.44, 0.37, 0.27, 0.21, 0.14];
+const NEUTRAL_F = [0.3, 0.35, 0.45, 0.55, 0.7, 0.85, 1, 1, 1, 1, 1];
+const STATUS = [
+  { key: 'success', name: 'Success', hex: '#16a34a' },
+  { key: 'warning', name: 'Warning', hex: '#f59e0b' },
+  { key: 'error', name: 'Error', hex: '#dc2626' },
+  { key: 'info', name: 'Info', hex: '#2563eb' },
+];
+
+/* ---------- state ---------- */
+const state = { primary: '#2563eb', gray: 'primary', stack: 'tailwind' };
+
+/* ---------- scales ---------- */
+function chromaScale(hex) {
+  const { L, C, H } = hexToOklch(hex);
+  let k = 0; CHROMA_L.forEach((l, i) => { if (Math.abs(l - L) < Math.abs(CHROMA_L[k] - L)) k = i; });
+  const d = L - CHROMA_L[k], base = C / CHROMA_F[k];
+  return STEPS.map((step, i) => ({ step, anchor: i === k, hex: i === k ? hex.toLowerCase() : oklchToHex(clamp(CHROMA_L[i] + d, 0.12, 0.99), base * CHROMA_F[i], H) }));
+}
+function grayTint() {
+  if (state.gray === 'pure') return { C: 0, H: 0, label: 'pure gray, no tint' };
+  if (state.gray === 'primary') { const { C, H } = hexToOklch(state.primary); if (C < 0.03) return { C: 0, H: 0, label: 'pure gray (your primary has no hue to borrow)' }; return { C: 0.012, H, label: `tinted toward your primary (hue ${Math.round(H)}°)` }; }
+  const g = GRAYS.find(x => x.id === state.gray);
+  const hex = g ? g.hex : state.gray;
+  const { C, H } = hexToOklch(hex);
+  const c = Math.min(C, 0.02);
+  return { C: c, H, label: `${g ? 'tinted like ' + g.name : 'tinted from ' + hex} (hue ${Math.round(H)}°${c < 0.004 ? ', practically pure' : ''})` };
+}
+function neutralScale() {
+  const { C, H } = grayTint();
+  return STEPS.map((step, i) => ({ step, hex: oklchToHex(NEUTRAL_L[i], C * NEUTRAL_F[i], H) }));
+}
+const at = (S, step) => S.find(x => x.step === step).hex;
+
+/* ---------- tokens ---------- */
+function fgFor(bg, light, dark) { return contrast(bg, light) >= 4.5 ? light : dark; }
+function buildTokens() {
+  const P = chromaScale(state.primary), N = neutralScale();
+  const S = Object.fromEntries(STATUS.map(s => [s.key, chromaScale(s.hex)]));
+  const n = s => at(N, s), p = s => at(P, s);
+  const neutralBrand = hexToOklch(state.primary).C < 0.03;
+  // Primary on light: start at the anchor (or 500 if the anchor is lighter). Use white text if it passes there or one step darker;
+  // otherwise keep the bright step with dark text (yellow, lime, terracotta) rather than walking down to mud.
+  const idx = s => STEPS.indexOf(s), hx = i => P[i].hex, ink = n(950);
+  const white = '#ffffff';
+  const passes = (bg, fg) => contrast(bg, fg) >= 4.5;
+  const a = P.findIndex(x => x.anchor);
+  let s = Math.max(a, idx(500));
+  let pl, plFg;
+  // A bright brand (anchored at 400 or lighter) keeps its own color and takes dark text: yellow, lime, cyan, terracotta.
+  const bright = a <= idx(400) && passes(hx(a), ink);
+  if (bright) { pl = hx(a); plFg = ink; }
+  else if (passes(hx(s), white)) { pl = hx(s); plFg = white; }
+  else if (s + 1 < P.length && passes(hx(s + 1), white)) { pl = hx(s + 1); plFg = white; }
+  else if (passes(hx(s), ink)) { pl = hx(s); plFg = ink; }
+  else { let i = s; while (i < P.length - 1 && !passes(hx(i), white)) i++; pl = hx(i); plFg = white; }
+  // Primary on dark: 500 with white if it passes, else 600 with white if it still reads against the page, else the bright step with dark text.
+  let pd, pdFg;
+  if (bright) { pd = hx(a); pdFg = ink; }
+  else if (passes(p(500), white)) { pd = p(500); pdFg = white; }
+  else if (passes(p(600), white) && contrast(p(600), n(950)) >= 3) { pd = p(600); pdFg = white; }
+  else if (passes(p(500), ink)) { pd = p(500); pdFg = ink; }
+  else { pd = p(400); pdFg = ink; }
+  // Links are text, so they need 4.5:1 against the page in each mode. Light: darkest-nearest step from 600. Dark: lightest step from 400 that passes.
+  let ll = [600, 700, 800].map(p).find(h => passes(h, white)) || p(800);
+  let ld = [400, 300, 200].map(p).find(h => passes(h, n(950))) || p(200);
+  if (neutralBrand) { pl = n(950); plFg = white; pd = n(50); pdFg = n(950); ll = n(950); ld = n(50); }
+  const st = (key, mode) => { const sc = S[key]; const bg = mode === 'light' ? at(sc, 600) : at(sc, 500); return { bg, fg: fgFor(bg, white, n(950)), soft: mode === 'light' ? at(sc, 50) : at(sc, 950), softFg: mode === 'light' ? at(sc, 700) : at(sc, 300), text: mode === 'light' ? at(sc, 600) : at(sc, 400) }; };
+  const mutedFgLight = [500, 600].map(n).find(h => passes(h, white) && passes(h, n(100))) || n(600);
+  const light = { background: white, foreground: n(950), card: white, popover: white, primary: pl, primaryFg: plFg, link: ll, secondary: n(100), secondaryFg: n(900), muted: n(100), mutedFg: mutedFgLight, accent: n(100), accentFg: n(900), border: n(200), input: n(300), ring: pl, shadow: '0 1px 2px 0 rgb(0 0 0 / .05)', status: Object.fromEntries(STATUS.map(s => [s.key, st(s.key, 'light')])) };
+  const dark = { background: n(950), foreground: n(50), card: n(900), popover: n(900), primary: pd, primaryFg: pdFg, link: ld, secondary: n(800), secondaryFg: n(50), muted: n(800), mutedFg: n(400), accent: n(800), accentFg: n(50), border: n(800), input: n(700), ring: pd, shadow: 'none', status: Object.fromEntries(STATUS.map(s => [s.key, st(s.key, 'dark')])) };
+  return { P, N, S, light, dark, neutralBrand };
+}
+function contrastRows(T) {
+  const rows = [];
+  const add = (mode, name, fg, bg, need) => rows.push({ mode, name, fg, bg, need, ratio: contrast(fg, bg) });
+  for (const mode of ['light', 'dark']) {
+    const m = T[mode];
+    add(mode, 'Main text on page', m.foreground, m.background, 4.5);
+    add(mode, 'Main text on card', m.foreground, m.card, 4.5);
+    add(mode, 'Secondary text on page', m.mutedFg, m.background, 4.5);
+    add(mode, 'Secondary text on muted', m.mutedFg, m.muted, 4.5);
+    add(mode, 'Text on primary button', m.primaryFg, m.primary, 4.5);
+    add(mode, 'Link on page', m.link, m.background, 4.5);
+    add(mode, 'Link on card', m.link, m.card, 4.5);
+    add(mode, 'Border on page', m.border, m.background, 1.2);
+    for (const s of STATUS) { add(mode, `${s.name} text on page`, m.status[s.key].text, m.background, 4.5); add(mode, `Text on ${s.name.toLowerCase()} soft`, m.status[s.key].softFg, m.status[s.key].soft, 4.5); }
+  }
+  return rows;
+}
+
+/* ---------- render ---------- */
+function renderStatic() {
+  $('brandSw').innerHTML = APPS.map(a => `<button type="button" class="swb" data-brand="${a.brand}" title="${a.brand}"><i style="background:${a.brand}"></i><span>${a.name}</span></button>`).join('');
+  $('graySw').innerHTML = GRAYS.map(g => `<button type="button" class="swb" data-gray="${g.id}"><i data-i></i><span>${g.name}</span></button>`).join('');
+  document.querySelectorAll('#stackSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.stack));
+}
+function renderControls(T) {
+  $('pColor').value = state.primary;
+  if (document.activeElement !== $('pHex')) $('pHex').value = state.primary;
+  document.querySelectorAll('#brandSw .swb').forEach(b => b.setAttribute('aria-pressed', b.dataset.brand.toLowerCase() === state.primary.toLowerCase()));
+  // each gray option shows the 950 it would produce
+  const saved = state.gray;
+  document.querySelectorAll('#graySw .swb').forEach(b => {
+    state.gray = b.dataset.gray; b.querySelector('[data-i]').style.background = at(neutralScale(), 600);
+    b.setAttribute('aria-pressed', b.dataset.gray === saved);
+  });
+  state.gray = saved;
+  const custom = !GRAYS.some(g => g.id === state.gray);
+  $('gColor').value = custom ? state.gray : at(T.N, 950);
+  if (document.activeElement !== $('gHex')) $('gHex').value = custom ? state.gray : '';
+  document.querySelectorAll('#stackSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.stack));
+  const { label } = grayTint();
+  $('note').textContent = `Primary ${state.primary}, gray ${label}. Everything else is generated: eleven steps of each, fixed status colors, and every light and dark token.`;
+}
+function renderChecks(T, rows) {
+  const items = [];
+  const pick = (k, t) => items.push(`<li><span class="dot ${k}">!</span><span>${t}</span></li>`);
+  const { H, C } = hexToOklch(state.primary);
+  if (T.neutralBrand) pick('warn', `Your primary is almost gray, so buttons go black on light and white on dark (the Vercel / Claude look). Links use the main text color. Pick a more saturated color if you want a colored button.`);
+  else {
+    if (H > 15 && H < 45 && C > 0.08) pick('warn', `Your primary is red-orange, the same family as the error color. Users will read your buttons as warnings. Consider a different hue, or accept that Delete and Save will look alike.`);
+  }
+  if (!T.neutralBrand) {
+    if (T.light.primaryFg !== '#ffffff') pick('warn', `White text does not pass on your primary without making it muddy, so buttons get dark text (${T.light.primaryFg}) on light. Yellow, lime, cyan, and terracotta brands do this. It works, it just looks different from what you may expect.`);
+    else if (T.dark.primaryFg !== '#ffffff') pick('warn', `On dark, white text does not pass on your primary, so the button uses dark text (${T.dark.primaryFg}) there. That is the Vercel look and it is fine.`);
+  }
+  const fails = rows.filter(r => r.ratio < r.need);
+  fails.forEach(f => pick(f.ratio < f.need * 0.8 ? 'bad' : 'warn', `${f.mode === 'light' ? 'Light' : 'Dark'}: ${f.name} is ${fmt(f.ratio)}:1, needs ${f.need}:1.`));
+  $('checks').innerHTML = items.join('');
+  $('checks').hidden = !items.length;
+}
+function previewHtml(m, label) {
+  const s = m.status;
+  return `
+    <div style="background:${m.background};border-color:${m.border};color:${m.foreground}" class="pvinner">
+      <div class="tag" style="color:${m.mutedFg}">${label}</div>
+      <div style="font-size:24px;font-weight:600;letter-spacing:-0.02em;line-height:1.2">Account settings</div>
+      <p style="font-size:14px;color:${m.mutedFg};line-height:1.5">Choose what you want to hear about. You can change this at any time. <a style="color:${m.link};text-decoration:underline;text-underline-offset:3px">Learn more</a></p>
+      <div class="pcard" style="background:${m.card};border-color:${m.border};box-shadow:${m.shadow}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-size:16px;font-weight:600">Notifications</div><span class="badge" style="background:${s.success.soft};color:${s.success.softFg}">Active</span></div>
+        <div class="line" style="background:${m.muted}"><span style="font-weight:500">Weekly digest</span><span style="color:${m.mutedFg}">Every Monday</span></div>
+        <div>
+          <div style="font-size:14px;font-weight:500;margin-bottom:6px">Email address</div>
+          <div class="inp" style="background:${m.background};border-color:${m.input};color:${m.mutedFg}">you@example.com</div>
+          <div style="font-size:12px;color:${m.mutedFg};margin-top:6px">We only email you about what you turned on.</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div class="btn" style="background:${m.primary};color:${m.primaryFg}">Save changes</div>
+          <div class="btn" style="background:${m.secondary};color:${m.secondaryFg};border:1px solid ${m.border}">Cancel</div>
+          <span style="font-size:14px;color:${s.error.text};margin-left:auto">Delete account</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${STATUS.map(x => `<span class="badge" style="background:${s[x.key].soft};color:${s[x.key].softFg}">${x.name}</span>`).join('')}
+      </div>
+    </div>`;
+}
+function renderPreview(T) {
+  for (const [id, mode, label] of [['pvLight', 'light', 'Light'], ['pvDark', 'dark', 'Dark']]) {
+    const m = T[mode], el = $(id);
+    el.style.background = m.background; el.style.borderColor = m.border; el.style.color = m.foreground;
+    el.innerHTML = previewHtml(m, label + ' mode');
+    el.querySelector('.pvinner').style.display = 'grid'; el.querySelector('.pvinner').style.gap = '14px';
+  }
+}
+function strip(S, showAnchor) {
+  return `<div class="strip">${S.map(x => `<div class="st${showAnchor && x.anchor ? ' anchor' : ''}"><i style="background:${x.hex}"></i><span>${x.step}<br><span class="hx">${x.hex.slice(1)}</span></span></div>`).join('')}</div>`;
+}
+function renderScales(T) {
+  const rows = [
+    ['Primary', state.primary, strip(T.P, true)],
+    ['Neutral', grayTint().label.split(' (')[0], strip(T.N, false)],
+    ...STATUS.map(s => [s.name, 'fixed', strip(T.S[s.key], false)]),
+  ];
+  $('scales').innerHTML = rows.map(([name, sub, html]) => `<div class="scale-row"><div><b>${name}</b><span class="sub">${sub}</span></div>${html}</div>`).join('');
+}
+
+/* ---------- export ---------- */
+function exportPrompt(T, rows) {
+  const { light: l, dark: d, P, N, S } = T;
+  const fails = rows.filter(r => r.ratio < r.need);
+  const list = sc => sc.map(x => `${x.step} ${x.hex}`).join('  ');
+  const pad = (s, n) => String(s).padEnd(n);
+  const tok = m => [
+    ['--background', m.background], ['--foreground', m.foreground],
+    ['--card', m.card], ['--card-foreground', m.foreground],
+    ['--popover', m.popover], ['--popover-foreground', m.foreground],
+    ['--primary', m.primary], ['--primary-foreground', m.primaryFg], ['--link', m.link],
+    ['--secondary', m.secondary], ['--secondary-foreground', m.secondaryFg],
+    ['--muted', m.muted], ['--muted-foreground', m.mutedFg],
+    ['--accent', m.accent], ['--accent-foreground', m.accentFg],
+    ['--destructive', m.status.error.bg], ['--destructive-foreground', m.status.error.fg],
+    ['--border', m.border], ['--input', m.input], ['--ring', m.ring],
+    ...STATUS.filter(s => s.key !== 'error').flatMap(s => [[`--${s.key}`, m.status[s.key].bg], [`--${s.key}-foreground`, m.status[s.key].fg]]),
+    ...STATUS.flatMap(s => [[`--${s.key}-soft`, m.status[s.key].soft], [`--${s.key}-soft-foreground`, m.status[s.key].softFg], [`--${s.key}-text`, m.status[s.key].text]]),
+  ];
+  const block = (m, indent = '  ') => tok(m).map(([k, v]) => `${indent}${pad(k + ':', 28)}${v};`).join('\n');
+  const jobs = [
+    ['page background', l.background, d.background], ['card / dialog', l.card, d.card], ['muted fill, rows, inputs', l.muted, d.muted], ['hover fill', l.accent, d.accent],
+    ['border / divider', l.border, d.border], ['input border', l.input, d.input], ['focus ring', l.ring, d.ring], ['secondary text', l.mutedFg, d.mutedFg], ['main text', l.foreground, d.foreground],
+    ['primary (buttons, focus)', l.primary, d.primary], ['text on primary', l.primaryFg, d.primaryFg], ['link text', l.link, d.link],
+    ...STATUS.map(s => [`${s.name.toLowerCase()} fill / text on it`, `${l.status[s.key].bg} / ${l.status[s.key].fg}`, `${d.status[s.key].bg} / ${d.status[s.key].fg}`]),
+    ...STATUS.map(s => [`${s.name.toLowerCase()} soft bg / text on it`, `${l.status[s.key].soft} / ${l.status[s.key].softFg}`, `${d.status[s.key].soft} / ${d.status[s.key].softFg}`]),
+  ].map(([j, a, b]) => `  ${pad(j, 32)}${pad(a, 20)}→ ${b}`).join('\n');
+
+  const head = `You are setting up the color system for my app. Use these exact values. Do not invent, adjust, or "improve" any of them.
+
+MY PRIMARY
+  ${state.primary}${T.neutralBrand ? ' (almost gray, so it is a neutral brand: buttons are black on light and white on dark, links use the main text color)' : `. Buttons: ${l.primary} with ${l.primaryFg} text on light, ${d.primary} with ${d.primaryFg} text on dark. Links are a separate token because text needs more contrast than a fill: ${l.link} on light, ${d.link} on dark.`}
+MY GRAY
+  ${grayTint().label}. Page is ${d.background} on dark, white on light. Text is ${d.foreground} on dark, ${l.foreground} on light. Never pure black, never pure white for text.
+
+PRIMARY SCALE
+  ${list(P)}
+NEUTRAL SCALE
+  ${list(N)}
+STATUS SCALES (fixed)
+${STATUS.map(s => `  ${pad(s.name, 9)}${list(S[s.key])}`).join('\n')}
+
+JOBS (light → dark)
+${jobs}
+
+CONTRAST
+  ${fails.length ? fails.length + ' pair(s) are below target. Fix these first by moving one step, and tell me which one you moved:\n' + fails.map(f => `  - ${f.mode}: ${f.name} is ${fmt(f.ratio)}:1, needs ${f.need}:1`).join('\n') : 'Every text pair passes 4.5:1 in both modes. Keep it that way: never lower text opacity, never pick a lighter gray for text than the ones listed.'}
+
+RULES THAT ALWAYS APPLY
+  1. Every color in the app comes from these tokens. No raw hex, no rgb(), no named colors, no palette classes anywhere in components.
+  2. One job per token. Backgrounds use background, card, muted, accent. Text uses foreground tokens. Lines use border and input. Never a text color as a background or the reverse.
+  3. Primary is for one primary action per screen and focus rings; link is for text links. Together about 10% of any screen. Everything else is gray. Never color a link with primary or a button with link: they are tuned for different contrast.
+  4. Status colors mean status. Success, warning, error, info: as text and icons on the page, as the soft background for banners and badges, as a solid fill only on a button that performs that action (a red Delete). Never as decoration, never as a second brand color.
+  5. Dark mode has no shadows. Depth is card (${d.card}) on page (${d.background}) with a ${d.border} border. Light mode cards are white with a ${l.border} border and a small shadow.
+  6. Text on any fill is the listed foreground for that fill. Never the color on itself, never lowered opacity, never a scale step you chose yourself.
+  7. Never use scale steps directly in components (no "primary-300", no "neutral-700"). If a job is missing, say so and we add a token here.
+`;
+
+  if (state.stack === 'html') {
+    return head + `
+DO THIS (plain HTML + CSS)
+  1. At the top of styles.css, add exactly this. Light is the default; dark applies when <html data-theme="dark"> is set or the OS prefers dark:
+
+:root {
+${block(l)}
+  --shadow-sm: ${l.shadow};
+}
+:root[data-theme="dark"] {
+${block(d)}
+  --shadow-sm: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+${block(d, '    ')}
+    --shadow-sm: none;
+  }
+}
+body { background: var(--background); color: var(--foreground); }
+
+  2. Style everything with var(--token). Cards: background var(--card), border 1px solid var(--border), box-shadow var(--shadow-sm). Inputs: background var(--background), border 1px solid var(--input). Buttons: background var(--primary), color var(--primary-foreground). Links: color var(--link). Helper text: color var(--muted-foreground). Focus: outline 2px solid var(--ring). Banners and badges: background var(--success-soft), color var(--success-soft-foreground), and the same pattern for warning, error, info.
+  3. Add a small theme toggle that sets data-theme="light" or "dark" on <html> and remembers it in localStorage.
+  4. When you're done, search every CSS and HTML file for "#" followed by 3 to 8 hex characters, "rgb(", "hsl(", "oklch(", and color words like white, black, gray, blue, red. The only hits allowed are inside the :root blocks above. Fix the rest and report what you changed.
+`;
+  }
+  const themeLines = tok(l).map(([k]) => k.slice(2)).map(name => `  --color-${name}: var(--${name});`).join('\n');
+  return head + `
+DO THIS (React + Tailwind v4 + shadcn/ui)
+  1. In globals.css, replace the values under :root and .dark with exactly these. Keep the variable names; add the ones that are new.
+
+:root {
+${block(l)}
+}
+.dark {
+${block(d)}
+}
+
+  2. In the same file, inside shadcn's existing @theme inline block, make the FIRST line \`--color-*: initial;\` so Tailwind's built-in palette stops existing (bg-zinc-900, text-blue-500 and friends produce nothing, so a stray one shows up as unstyled instead of wrong). Then make sure every one of these mappings is present in that block (shadcn already has most of them; add the missing ones):
+
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-black: #000000;
+${themeLines}
+
+  3. Use shadcn components from @/components/ui and the job classes only: bg-background, text-foreground, bg-card, bg-muted, text-muted-foreground, bg-primary, text-primary-foreground, text-link (links), bg-accent (hover), border-border, border-input, ring-ring, bg-destructive, text-destructive-foreground, and for status: bg-success-soft text-success-soft-foreground (same for warning, error, info), text-success-text for inline status words. Dark mode is class="dark" on <html>. Cards get no shadow in dark; in light, shadow-sm.
+  4. When you're done, grep the app (excluding globals.css and components/ui) for: bg-[a-z]+-[0-9], text-[a-z]+-[0-9], border-[a-z]+-[0-9], #[0-9a-fA-F]{3,8}, rgb(, hsl(, oklch(, and style={{. Every hit is a bug. Fix them and report what you changed.
+`;
+}
+
+/* ---------- main ---------- */
+let current = {};
+function render() {
+  const T = buildTokens(), rows = contrastRows(T);
+  current = { T, rows };
+  renderControls(T);
+  renderChecks(T, rows);
+  renderPreview(T);
+  renderScales(T);
+  renderExport();
+  save();
+}
+function renderExport() { $('exportOut').value = exportPrompt(current.T, current.rows); }
+
+/* ---------- persistence ---------- */
+const KEY = 'pick-your-colors-v1';
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  try { history.replaceState(null, '', '#' + new URLSearchParams({ p: state.primary.slice(1), g: state.gray.replace('#', 'hex:'), stack: state.stack })); } catch (e) {}
+}
+function load() {
+  try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && typeof saved === 'object') Object.assign(state, saved); } catch (e) {}
+  try {
+    const q = new URLSearchParams(location.hash.slice(1));
+    if (q.has('p') && hexToRgb('#' + q.get('p'))) state.primary = '#' + q.get('p').toLowerCase();
+    if (q.has('g')) { const g = q.get('g'); if (g.startsWith('hex:') && hexToRgb('#' + g.slice(4))) state.gray = '#' + g.slice(4).toLowerCase(); else if (GRAYS.some(x => x.id === g)) state.gray = g; }
+    if (['html', 'tailwind'].includes(q.get('stack'))) state.stack = q.get('stack');
+  } catch (e) {}
+  if (!hexToRgb(state.primary)) state.primary = '#2563eb';
+  if (!GRAYS.some(x => x.id === state.gray) && !hexToRgb(state.gray)) state.gray = 'primary';
+}
+
+/* ---------- events ---------- */
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400); }
+const on = (id, ev, fn) => $(id).addEventListener(ev, fn);
+on('pColor', 'input', e => { state.primary = e.target.value.toLowerCase(); render(); });
+on('pHex', 'input', e => { const v = e.target.value.trim(); const h = v.startsWith('#') ? v : '#' + v; if (hexToRgb(h)) { state.primary = h.toLowerCase(); render(); } });
+on('pHex', 'blur', render);
+on('brandSw', 'click', e => { const b = e.target.closest('[data-brand]'); if (!b) return; state.primary = b.dataset.brand.toLowerCase(); render(); });
+on('gColor', 'input', e => { state.gray = e.target.value.toLowerCase(); render(); });
+on('gHex', 'input', e => { const v = e.target.value.trim(); if (!v) return; const h = v.startsWith('#') ? v : '#' + v; if (hexToRgb(h)) { state.gray = h.toLowerCase(); render(); } });
+on('gHex', 'blur', render);
+on('graySw', 'click', e => { const b = e.target.closest('[data-gray]'); if (!b) return; state.gray = b.dataset.gray; render(); });
+on('stackSeg', 'click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; state.stack = b.dataset.v; renderControls(current.T); renderExport(); save(); });
+on('copyBtn', 'click', async () => { try { await navigator.clipboard.writeText($('exportOut').value); toast('Prompt copied'); } catch (e) { $('exportOut').select(); toast('Select all and copy'); } });
+on('shareBtn', 'click', async () => { try { await navigator.clipboard.writeText(location.href); toast('Link copied'); } catch (e) { toast('Copy the URL from the address bar'); } });
+
+load();
+renderStatic();
+render();
+</script>
+</body>
+</html>

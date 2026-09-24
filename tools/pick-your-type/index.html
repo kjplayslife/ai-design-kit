@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pick Your Type</title>
+<meta name="description" content="Pick one font and one ratio. Get a type scale on the 4px grid, line heights, weights, a mobile version, and a prompt that wires it into your app.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #ececee; --card: #ffffff; --muted: #f4f4f5; --hover: #e4e4e7; --border: #d9d9dd; --border2: #c8c8cd;
+    --text: #09090b; --text2: #52525b; --solid: #696e77;
+    --brand: #2563eb; --brand-fg: #ffffff;
+    --ok: #16a34a; --warn: #d97706; --bad: #dc2626;
+    --shadow: none; --radius: 8px;
+    --pick: "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  a { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+  code, .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13px; }
+  h1, h2, h3 { margin: 0; letter-spacing: -0.02em; font-weight: 600; line-height: 1.15; }
+  h1 { font-size: 40px; }
+  h2 { font-size: 24px; }
+  h3 { font-size: 18px; font-weight: 500; letter-spacing: 0; }
+  p { margin: 0; max-width: 65ch; }
+  .muted { color: var(--text2); }
+  .small { font-size: 14px; }
+  .xs { font-size: 12px; }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 32px 24px 96px; display: grid; gap: 36px; }
+  @media (max-width: 640px) { .page { padding: 24px 16px 64px; gap: 32px; } h1 { font-size: 32px; } }
+  .eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--text2); font-weight: 500; }
+  section { display: grid; gap: 16px; }
+  .step { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .step .n { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--text2); font-weight: 500; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+  .grid2 { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 800px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+
+  /* controls */
+  label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .field { display: grid; gap: 6px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  input[type="text"] { height: 40px; padding: 0 12px; border-radius: 6px; border: 1px solid var(--border2); background: var(--muted); color: var(--text); font: inherit; font-size: 14px; width: 100%; }
+  input[type="text"]:focus-visible, button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .hint { font-size: 12px; color: var(--text2); }
+  button { height: 40px; padding: 0 16px; border-radius: 6px; border: 1px solid var(--border2); background: var(--muted); color: var(--text); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+  button:hover { background: var(--hover); }
+  button.primary { background: var(--brand); color: var(--brand-fg); border-color: transparent; }
+  button.primary:hover { filter: brightness(1.08); }
+  button[aria-pressed="true"] { background: var(--hover); border-color: var(--text2); }
+  button.sm { height: 32px; padding: 0 12px; font-size: 13px; }
+  .seg { display: inline-flex; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; flex-wrap: wrap; }
+  .seg button { border: 0; border-radius: 0; height: auto; min-height: 36px; padding: 6px 12px; line-height: 1.2; background: var(--card); }
+  .seg button + button { border-left: 1px solid var(--border2); }
+  .seg button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .seg button small { display: block; font-size: 11px; font-weight: 400; opacity: .75; margin-top: 2px; }
+
+  /* font + ratio block */
+  .pick { gap: 14px; }
+  .fonts { display: grid; gap: 8px; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 640px) { .fonts { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 900px) { .fonts { grid-template-columns: repeat(5, 1fr); } }
+  .font-card { display: grid; grid-template-columns: 40px 1fr; gap: 1px 10px; padding: 9px 11px; height: auto; text-align: left; font-weight: 400; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); align-items: center; }
+  .font-card:hover { background: var(--card); border-color: var(--border2); }
+  .font-card[aria-pressed="true"] { border-color: var(--text); background: var(--card); }
+  .font-card .sample { grid-row: 1 / 3; font-size: 26px; line-height: 1; font-weight: 600; letter-spacing: -0.02em; }
+  .font-card b { font-weight: 600; font-size: 14px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .font-card .meta { font-size: 11px; color: var(--text2); font-family: Inter, ui-sans-serif, system-ui, sans-serif; line-height: 1.35; }
+  .ctl { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; }
+
+  /* light band for the in-context preview */
+  .light-zone {
+    --bg: #ffffff; --card: #ffffff; --muted: #f4f4f5; --hover: #e4e4e7; --border: #e4e4e7; --border2: #d4d4d8;
+    --text: #09090b; --text2: #52525b; --brand: #1d4ed8; --brand-fg: #ffffff; --shadow: 0 1px 2px 0 rgb(0 0 0 / .06);
+    background: var(--bg); color: var(--text); margin: 0 -24px; padding: 32px 24px 40px; border-top: 1px solid #d9d9dd; border-bottom: 1px solid #d9d9dd;
+  }
+  @media (max-width: 640px) { .light-zone { margin: 0 -16px; padding: 28px 16px 32px; } }
+  .light-zone > * { max-width: 1052px; margin-left: auto; margin-right: auto; width: 100%; }
+  .light-zone .pv { box-shadow: var(--shadow); }
+  .light-zone .phone { background: #111113; border-color: #27272a; }
+
+  /* checks */
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 14px; }
+  .checks li { display: flex; gap: 10px; align-items: flex-start; }
+  .dot { flex: none; width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 600; margin-top: 3px; color: #fff; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+
+  /* step 3 specimen */
+  .specimen { display: grid; }
+  .spec { display: grid; grid-template-columns: 168px 1fr; gap: 16px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .spec:last-child { border-bottom: 0; }
+  .spec .meta { font-size: 12px; color: var(--text2); line-height: 1.5; }
+  .spec .meta b { color: var(--text); font-weight: 600; font-size: 13px; }
+  .spec .meta .mono { font-size: 12px; }
+  .spec .use { display: block; margin-top: 2px; }
+  .spec .txt { font-family: var(--pick); overflow-wrap: anywhere; max-width: 65ch; font-size: var(--d); }
+  @media (max-width: 720px) { .spec { grid-template-columns: 1fr; gap: 8px; } }
+  @media (max-width: 639px) { .spec .txt { font-size: var(--m); } }
+
+  /* tables */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--text2); font-weight: 500; }
+  td.num { font-variant-numeric: tabular-nums; }
+
+  /* preview */
+  .pv { padding: 24px; border-radius: var(--radius); display: grid; gap: 16px; border: 1px solid var(--border); font-family: var(--pick); }
+  .pv .line { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; border-radius: 6px; }
+  .pv .btn { height: 36px; padding: 0 14px; border-radius: 6px; border: 0; display: inline-flex; align-items: center; width: max-content; }
+  .pv .inp { height: 36px; border-radius: 6px; display: flex; align-items: center; padding: 0 12px; }
+  .pv-wrap { display: grid; gap: 16px; grid-template-columns: 1fr; }
+  @media (min-width: 900px) { .pv-wrap { grid-template-columns: 1fr 375px; align-items: start; } }
+  .phone { border: 1px solid var(--border2); border-radius: 24px; padding: 12px; background: var(--bg); }
+  .phone .pv { border-radius: 16px; }
+
+  /* export */
+  textarea { width: 100%; min-height: 480px; padding: 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--muted); color: var(--text); font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; resize: vertical; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #09090b; color: #fafafa; padding: 10px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw; }
+  .toast.show { opacity: 1; }
+  footer { border-top: 1px solid var(--border); padding-top: 24px; font-size: 14px; color: var(--text2); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Pick Your Type</h1>
+  </header>
+
+  <!-- FONT + RATIO -->
+  <section class="pick">
+    <div class="fonts" id="fontGrid"></div>
+    <div class="ctl">
+      <div class="field" style="width:280px;max-width:100%">
+        <label for="customFont" style="margin:0">Any Google Font</label>
+        <div class="row" style="flex-wrap:nowrap">
+          <input type="text" id="customFont" placeholder="Exact name, e.g. Space Grotesk" autocomplete="off">
+          <button type="button" id="customLoad">Load</button>
+        </div>
+      </div>
+      <div class="field">
+        <label style="margin:0">Ratio</label>
+        <div class="seg" id="ratioSeg"></div>
+      </div>
+      <div class="field">
+        <label style="margin:0">Heading weight</label>
+        <div class="seg" id="weightSeg">
+          <button type="button" data-v="600">600 Semibold<small>Calm. Most apps.</small></button>
+          <button type="button" data-v="700">700 Bold<small>Louder. Marketing.</small></button>
+        </div>
+      </div>
+    </div>
+    <div class="hint" id="customNote">One family; headings are the same font, heavier. Body is 16px, fixed. Each heading is the one below it × the ratio, rounded to 4px.</div>
+    <ul class="checks" id="checks" hidden></ul>
+  </section>
+
+  <!-- IN CONTEXT (light) -->
+  <div class="light-zone">
+    <section>
+      <h2>In context</h2>
+      <div class="pv-wrap">
+        <div class="pv" id="pvDesktop" style="background:var(--card)"></div>
+        <div class="phone"><div class="pv" id="pvMobile" style="background:var(--card)"></div></div>
+      </div>
+      <div class="hint">Desktop and phone width. On phones h1, h2, h3 each drop one step; nothing else changes.</div>
+    </section>
+  </div>
+
+  <!-- SCALE -->
+  <section>
+    <h2>Your scale</h2>
+    <div class="card"><div class="specimen" id="specimen"></div></div>
+  </section>
+
+  <!-- EXPORT -->
+  <section>
+    <h2>Prompt for your agent</h2>
+    <p class="muted">Copy this and paste it at the top of your chat with Claude, Cursor, Lovable, or whatever is building your UI. It carries the font, every size, the rules, and it tells the agent exactly where to put them.</p>
+    <div class="card" style="display:grid;gap:12px">
+      <div class="row" style="justify-content:space-between">
+        <div class="field" style="gap:4px">
+          <label style="margin:0">What are you building with?</label>
+          <div class="seg" id="stackSeg">
+            <button type="button" data-v="html">Plain HTML + CSS</button>
+            <button type="button" data-v="tailwind">React + Tailwind (shadcn)</button>
+          </div>
+        </div>
+        <div class="row">
+          <button type="button" class="sm" id="shareBtn">Copy share link</button>
+          <button type="button" class="sm primary" id="copyBtn">Copy prompt</button>
+        </div>
+      </div>
+      <textarea id="exportOut" readonly spellcheck="false" aria-label="Prompt for your agent"></textarea>
+    </div>
+  </section>
+
+  <footer>
+    Rules: one font family · body is 16px · headings come from one ratio, rounded to 4px · headings 1.2, body 1.5 · labels and buttons are 14px at 500 · nothing under 12px · paragraphs max 65ch · numbers in columns are tabular.
+    &nbsp;·&nbsp; <a href="RULES.md">Rules</a> &nbsp;·&nbsp; <a href="PROMPT.md">Prompt</a> &nbsp;·&nbsp; <a href="../pick-your-grays/">Pick Your Grays</a>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const FALLBACK = 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+
+/* ---------- data ---------- */
+const FONTS = [
+  { name: 'Inter', note: 'The default. Neutral, made for screens. GitHub, Figma, Linear.' },
+  { name: 'Geist', note: "Vercel's font. Cleaner and more technical than Inter." },
+  { name: 'DM Sans', note: 'Friendly and round without going soft.' },
+  { name: 'Manrope', note: 'Geometric with some personality. Startups.' },
+  { name: 'Plus Jakarta Sans', note: 'Warm and modern. Holds up at big sizes.' },
+  { name: 'Figtree', note: 'Rounded and approachable. Consumer apps.' },
+  { name: 'IBM Plex Sans', note: 'A little industrial. Dashboards and docs.' },
+  { name: 'Source Sans 3', note: 'Quiet and classic. Gets out of the way.' },
+  { name: 'System', note: 'No download. Looks native on every device. Fastest.', system: true },
+];
+const RATIOS = [
+  { v: 1.2, name: 'Minor third', label: 'Tight', use: 'Dense apps' },
+  { v: 1.25, name: 'Major third', label: 'Balanced', use: 'Most apps' },
+  { v: 1.333, name: 'Perfect fourth', label: 'Bold', use: 'Marketing pages' },
+];
+const BASE = 16;
+const SAMPLES = {
+  h1: 'Build apps that look finished', h2: 'Account settings', h3: 'Notifications', h4: 'Email preferences', h5: 'Weekly digest', h6: 'Delivery',
+  'body-lg': 'Everything on this screen comes from one font and one ratio. Change either and the whole app follows.',
+  body: 'Your changes are saved automatically. You can undo any change from the history panel for thirty days.',
+  'body-sm': 'Last synced 2 minutes ago · 14 items · Save changes',
+  caption: 'Helper text sits under the field it explains. Timestamps and legal text live here too.',
+};
+const USES = {
+  h1: 'Hero and page titles on marketing pages', h2: 'Page title inside the app', h3: 'Section titles, dialog titles',
+  h4: 'Card titles', h5: 'Small headings, table titles', h6: 'Group labels, sidebar sections',
+  'body-lg': 'Intro paragraphs, empty states', body: 'Paragraphs, inputs, list items',
+  'body-sm': 'Labels, buttons, table cells, nav. Weight 500 for labels and buttons', caption: 'Helper text, timestamps. Uppercase +0.08em for eyebrows',
+};
+
+/* ---------- state ---------- */
+const state = { font: 'Inter', custom: '', ratio: 1.25, hw: 600, stack: 'tailwind' };
+
+const fontName = () => state.font === 'custom' ? state.custom : state.font;
+const isSystem = () => state.font === 'System';
+const fontStack = () => isSystem() ? FALLBACK : `"${fontName()}", ${FALLBACK}`;
+const googleHref = n => `https://fonts.googleapis.com/css2?family=${n.trim().replace(/\s+/g, '+')}:wght@400;500;600;700&display=swap`;
+const rem = px => String(+(px / 16).toFixed(4));
+const r4 = x => Math.max(12, Math.round(x / 4) * 4);
+const tracking = px => px >= 32 ? '-0.02em' : px >= 24 ? '-0.01em' : '0';
+
+function buildScale() {
+  const r = state.ratio;
+  const h = n => r4(BASE * Math.pow(r, n));
+  const heads = [['h1', h(6)], ['h2', h(5)], ['h3', h(4)], ['h4', h(3)], ['h5', h(2)], ['h6', h(1)]];
+  const rows = heads.map(([key, px], i) => ({ key, px, mobile: i < 3 ? heads[i + 1][1] : px, kind: 'heading', lh: 1.2, weight: state.hw, tracking: tracking(px) }));
+  rows.push(
+    { key: 'body-lg', px: 18, mobile: 18, kind: 'body', lh: 1.5, weight: 400, tracking: '0' },
+    { key: 'body', px: 16, mobile: 16, kind: 'body', lh: 1.5, weight: 400, tracking: '0' },
+    { key: 'body-sm', px: 14, mobile: 14, kind: 'body', lh: 1.5, weight: 400, tracking: '0' },
+    { key: 'caption', px: 12, mobile: 12, kind: 'body', lh: 1.4, weight: 400, tracking: '0' },
+  );
+  rows.forEach(r => { r.use = USES[r.key]; r.sample = SAMPLES[r.key]; });
+  return rows;
+}
+const byKey = (rows, k) => rows.find(r => r.key === k);
+
+/* ---------- render ---------- */
+function renderStatic() {
+  $('fontGrid').innerHTML = FONTS.map(f => `
+    <button type="button" class="font-card" data-f="${f.name}">
+      <span class="sample">Ag</span>
+      <b>${f.name}</b>
+      <span class="meta">${f.note}</span>
+    </button>`).join('');
+  // Set the family from JS: the fallback stack contains quotes, which would end an inline style attribute early.
+  document.querySelectorAll('#fontGrid .font-card').forEach(b => {
+    const f = FONTS.find(x => x.name === b.dataset.f);
+    b.style.fontFamily = f.system ? FALLBACK : `"${f.name}", ${FALLBACK}`;
+  });
+  $('ratioSeg').innerHTML = RATIOS.map(r => `<button type="button" data-v="${r.v}" title="${r.name}">${r.label} · ${r.v}<small>${r.use}</small></button>`).join('');
+}
+function renderControls() {
+  document.querySelectorAll('#fontGrid .font-card').forEach(b => b.setAttribute('aria-pressed', state.font === b.dataset.f));
+  document.querySelectorAll('#ratioSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === state.ratio));
+  document.querySelectorAll('#weightSeg button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.v === state.hw));
+  document.querySelectorAll('#stackSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === state.stack));
+  if (state.font === 'custom') { $('customFont').value = state.custom; $('customNote').textContent = `Using ${state.custom} from Google Fonts.`; }
+  document.documentElement.style.setProperty('--pick', fontStack());
+}
+function renderChecks(rows) {
+  // Only things worth interrupting for. The page stays quiet when everything is fine.
+  const items = [];
+  const pick = (k, t) => items.push(`<li><span class="dot ${k}">!</span><span>${t}</span></li>`);
+  const h1 = byKey(rows, 'h1'), h2 = byKey(rows, 'h2');
+  const heads = rows.filter(r => r.kind === 'heading');
+  if (heads.some((r, i) => i && heads[i - 1].px === r.px)) pick('bad', 'Two heading sizes rounded to the same value. Pick a bigger ratio.');
+  if (h1.px >= 64) pick('warn', `h1 is ${h1.px}px. Right for a landing page hero, too big for a screen inside an app. Inside the app, page titles are h2 (${h2.px}px).`);
+  $('checks').innerHTML = items.join('');
+  $('checks').hidden = !items.length;
+}
+function renderSpecimen(rows) {
+  $('specimen').innerHTML = rows.map(r => `
+    <div class="spec">
+      <div class="meta">
+        <b>${r.key}</b><br>
+        <span class="mono">${r.px}px · lh ${r.lh} · ${r.weight}${r.tracking !== '0' ? ' · ' + r.tracking : ''}${r.mobile !== r.px ? ` · mobile ${r.mobile}px` : ''}</span>
+        <span class="use">${r.use}</span>
+      </div>
+      <div class="txt" style="--d:${r.px}px;--m:${r.mobile}px;line-height:${r.lh};font-weight:${r.weight};letter-spacing:${r.tracking}">${r.sample}</div>
+    </div>`).join('');
+}
+function previewHtml(rows, mobile) {
+  const s = k => { const r = byKey(rows, k); return `font-size:${mobile ? r.mobile : r.px}px;line-height:${r.lh};font-weight:${r.weight};letter-spacing:${r.tracking}`; };
+  const cap = byKey(rows, 'caption'), sm = byKey(rows, 'body-sm'), body = byKey(rows, 'body');
+  return `
+    <div style="font-size:${cap.px}px;line-height:${cap.lh};letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--text2)">Settings</div>
+    <div style="${s('h2')}">Account settings</div>
+    <div style="${s('h4')};margin-top:4px">Notifications</div>
+    <p style="font-size:${body.px}px;line-height:${body.lh};color:var(--text2);max-width:65ch">Choose what you want to hear about. You can change this at any time and it applies to every device.</p>
+    <div class="line" style="background:var(--muted);font-size:${sm.px}px;line-height:${sm.lh}"><span style="font-weight:500">Weekly digest</span><span style="color:var(--text2)">Every Monday</span></div>
+    <div>
+      <div style="font-size:${sm.px}px;line-height:${sm.lh};font-weight:500;margin-bottom:6px">Email address</div>
+      <div class="inp" style="background:var(--muted);border:1px solid var(--border2);font-size:${body.px}px;color:var(--text2)">you@example.com</div>
+      <div style="font-size:${cap.px}px;line-height:${cap.lh};color:var(--text2);margin-top:6px">We only email you about what you turned on.</div>
+    </div>
+    <div class="btn" style="background:var(--brand);color:var(--brand-fg);font-size:${sm.px}px;font-weight:500">Save changes</div>`;
+}
+
+/* ---------- export ---------- */
+function exportPrompt(rows) {
+  const name = fontName(), g = isSystem() ? null : name, stack = fontStack();
+  const ratio = RATIOS.find(x => x.v === state.ratio);
+  const pad = (s, n) => String(s).padEnd(n);
+  const table = rows.map(r => `  ${pad(r.key, 9)}${pad(r.px + 'px', 8)}${pad(r.mobile + 'px', 8)}${pad(r.lh, 6)}${pad(r.weight, 7)}${r.tracking}`).join('\n');
+  const h = k => byKey(rows, k);
+  const links = g ? `<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n<link rel="stylesheet" href="${googleHref(g)}">` : '';
+  const wrongBold = state.hw === 600 ? 'font-bold' : 'font-semibold';
+
+  const head = `You are setting up the typography for my app. Use these exact values. Do not invent, adjust, or "improve" any of them.
+
+MY FONT
+  ${name}${g ? ' (Google Fonts)' : ' (the device font, nothing to load)'}. One family for everything. Headings are the same font at weight ${state.hw}.
+  CSS stack: ${stack}
+
+SCALE  (body 16px · ${ratio.name} ${ratio.v} · headings rounded to the 4px grid)
+  role     desktop mobile  lh    weight tracking
+${table}
+  Mobile = screens under 640px. Only h1, h2, h3 change.
+
+RULES THAT ALWAYS APPLY
+  1. One font family. Never add a second one, not for headings, not for numbers, not for a logo. Monospace is allowed for code only.
+  2. Every font size comes from these tokens. No font-size in px, no arbitrary sizes, no framework default sizes. If a size feels wrong, say so and we change the token, not the component.
+  3. Headings: line-height 1.2, weight ${state.hw}, tracking as listed. Body: line-height 1.5, weight 400, tracking 0. Never tighten body text.
+  4. Labels, buttons, tabs, table headers, and nav items are body-sm (14px) at weight 500. Not bold, not uppercase.
+  5. Eyebrows and tiny section labels are caption (12px), uppercase, +0.08em tracking, weight 500. That is the only uppercase text in the app.
+  6. Paragraphs are max 65ch wide. Nothing in the app is smaller than 12px.
+  7. Hierarchy comes from size and weight, never from color alone. Secondary text uses the muted text color at the same size, not a smaller size.
+  8. Numbers that sit in columns or change over time (prices, dates, counts, stats, timers) use tabular figures so the digits line up. Tables get it by default.
+`;
+
+  if (state.stack === 'html') {
+    return head + `
+DO THIS (plain HTML + CSS)
+  1. ${g ? `In <head>, before your stylesheet:\n${links}` : 'Nothing to load. The system font is already on the device.'}
+  2. At the top of styles.css, add exactly this:
+
+:root {
+  --font-sans: ${stack};
+${rows.map(r => `  --text-${r.key}: ${rem(r.px)}rem;  /* ${r.px}px */`).join('\n')}
+  --leading-heading: 1.2;
+  --leading-body: 1.5;
+  --leading-caption: 1.4;
+  --weight-body: 400;
+  --weight-medium: 500;
+  --weight-heading: ${state.hw};
+}
+@media (max-width: 639px) {
+  :root { --text-h1: ${rem(h('h1').mobile)}rem; --text-h2: ${rem(h('h2').mobile)}rem; --text-h3: ${rem(h('h3').mobile)}rem; }
+}
+html { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+body { font-size: var(--text-body); line-height: var(--leading-body); font-weight: var(--weight-body); }
+h1, h2, h3, h4, h5, h6 { margin: 0; line-height: var(--leading-heading); font-weight: var(--weight-heading); text-wrap: balance; }
+${['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].map(k => `${k} { font-size: var(--text-${k}); letter-spacing: ${h(k).tracking}; }`).join('\n')}
+p { margin: 0; max-width: 65ch; }
+small, .caption { font-size: var(--text-caption); line-height: var(--leading-caption); }
+label, button, th, nav a { font-size: var(--text-body-sm); font-weight: var(--weight-medium); }
+.eyebrow { font-size: var(--text-caption); font-weight: var(--weight-medium); text-transform: uppercase; letter-spacing: .08em; }
+table, .num { font-variant-numeric: tabular-nums; }
+
+  3. Everywhere else, size text with the variables only: font-size: var(--text-body-sm), never a number. Headings use the h1–h6 elements, not divs with a size. Put class="num" on any number outside a table that sits in a column or changes (prices, dates, counts, stats, timers).
+  4. When you're done, search every CSS and HTML file for "font-size:", "font-family:", "font-weight:", and "letter-spacing:". The only hits allowed are in the block above. Fix the rest and report what you changed.
+`;
+  }
+  return head + `
+DO THIS (React + Tailwind v4 + shadcn/ui)
+  1. Load the font. ${g ? `Add these to index.html (Vite) or app/layout.tsx (Next.js). If the project already uses next/font/google, load "${g}" there with weights 400, 500, ${state.hw} and point its variable at --font-sans instead.\n${links}` : 'Nothing to load, the system stack below is already on the device.'}
+  2. In globals.css, inside the existing @theme (or @theme inline) block, add exactly this. The first group puts Tailwind's own sizes on our scale so shadcn components stay on grid; the second group is what app code uses.
+
+  --font-sans: ${stack};
+
+${[['xs', 12, 1.4], ['sm', 14, 1.5], ['base', 16, 1.5], ['lg', 18, 1.5], ['xl', h('h6').px, 1.2], ['2xl', h('h5').px, 1.2], ['3xl', h('h4').px, 1.2], ['4xl', h('h3').px, 1.2], ['5xl', h('h2').px, 1.2], ['6xl', h('h1').px, 1.2]].map(([n, px, lh]) => `  ${pad(`--text-${n}: ${rem(px)}rem;`, 24)}--text-${n}--line-height: ${lh};`).join('\n')}
+  --text-7xl: initial; --text-8xl: initial; --text-9xl: initial;
+
+${rows.filter(r => r.kind === 'heading').map(r => `  --text-${r.key}: ${rem(r.px)}rem; --text-${r.key}--line-height: 1.2; --text-${r.key}--letter-spacing: ${r.tracking}; --text-${r.key}--font-weight: ${state.hw};`).join('\n')}
+${rows.filter(r => r.kind === 'body').map(r => `  --text-${r.key}: ${rem(r.px)}rem; --text-${r.key}--line-height: ${r.lh};`).join('\n')}
+
+  3. Also in globals.css, after the theme block:
+
+@layer base {
+  html { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  body { font-size: var(--text-body); line-height: 1.5; }
+  h1, h2, h3, h4, h5, h6 { text-wrap: balance; }
+  p { max-width: 65ch; }
+  table { font-variant-numeric: tabular-nums; }
+}
+
+  4. In app code use only these classes for text: text-h1 … text-h6, text-body-lg, text-body, text-body-sm, text-caption, and font-medium (500) on labels, buttons, tabs, and table headers. Page and section headings are responsive by writing them as: h1 = "text-h2 sm:text-h1", h2 = "text-h3 sm:text-h2", h3 = "text-h4 sm:text-h3". Eyebrows are "text-caption font-medium uppercase tracking-[0.08em]". Any number outside a table that sits in a column or changes (prices, dates, counts, stats, timers) gets "tabular-nums". Never use text-sm, text-lg, text-xl, text-2xl and so on in app code; those exist only so shadcn's own components in components/ui stay on the scale.
+  5. When you're done, grep the app (excluding globals.css and components/ui) for: text-(xs|sm|base|lg|xl|[2-9]xl), text-\\[, font-\\[, ${wrongBold}, tracking-tight, tracking-wide, uppercase, fontSize:, and font-family. Every hit is a bug unless it is an eyebrow. Fix them and report what you changed.
+`;
+}
+
+/* ---------- main ---------- */
+let current = [];
+function render() {
+  current = buildScale();
+  renderControls();
+  renderChecks(current);
+  renderSpecimen(current);
+  $('pvDesktop').innerHTML = previewHtml(current, false);
+  $('pvMobile').innerHTML = previewHtml(current, true);
+  renderExport();
+  save();
+}
+function renderExport() { $('exportOut').value = exportPrompt(current); }
+
+/* ---------- persistence ---------- */
+const KEY = 'pick-your-type-v1';
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  try {
+    const p = new URLSearchParams({ f: fontName(), r: state.ratio, hw: state.hw, stack: state.stack });
+    history.replaceState(null, '', '#' + p.toString());
+  } catch (e) {}
+}
+function load() {
+  try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (saved && typeof saved === 'object') Object.assign(state, saved); } catch (e) {}
+  try {
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (p.has('f')) {
+      const f = p.get('f');
+      if (FONTS.some(x => x.name === f)) { state.font = f; state.custom = ''; } else if (f) { state.font = 'custom'; state.custom = f; }
+      if (RATIOS.some(x => x.v === +p.get('r'))) state.ratio = +p.get('r');
+      if (['600', '700'].includes(p.get('hw'))) state.hw = +p.get('hw');
+      if (['html', 'tailwind'].includes(p.get('stack'))) state.stack = p.get('stack');
+    }
+  } catch (e) {}
+  if (state.font === 'custom' && state.custom) loadGoogle(state.custom, true);
+}
+
+/* ---------- events ---------- */
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 2400); }
+function loadGoogle(name, quiet) {
+  name = name.trim(); if (!name) return;
+  const old = $('customLink'); if (old) old.remove();
+  const link = document.createElement('link');
+  link.id = 'customLink'; link.rel = 'stylesheet'; link.href = googleHref(name);
+  link.onerror = () => { $('customNote').textContent = `Google Fonts has nothing called "${name}". Check the spelling on fonts.google.com.`; toast('Font not found'); };
+  link.onload = () => { if (!quiet) toast(`${name} loaded`); render(); };
+  document.head.appendChild(link);
+  state.font = 'custom'; state.custom = name;
+}
+const on = (id, ev, fn) => $(id).addEventListener(ev, fn);
+const NOTE = 'One family; headings are the same font, heavier. Body is 16px, fixed. Each heading is the one below it × the ratio, rounded to 4px.';
+on('fontGrid', 'click', e => { const b = e.target.closest('[data-f]'); if (!b) return; state.font = b.dataset.f; state.custom = ''; $('customFont').value = ''; $('customNote').textContent = NOTE; render(); });
+on('customLoad', 'click', () => { loadGoogle($('customFont').value); render(); });
+on('customFont', 'keydown', e => { if (e.key === 'Enter') { e.preventDefault(); loadGoogle($('customFont').value); render(); } });
+on('ratioSeg', 'click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; state.ratio = +b.dataset.v; render(); });
+on('weightSeg', 'click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; state.hw = +b.dataset.v; render(); });
+on('stackSeg', 'click', e => { const b = e.target.closest('button[data-v]'); if (!b) return; state.stack = b.dataset.v; renderControls(); renderExport(); save(); });
+on('copyBtn', 'click', async () => { try { await navigator.clipboard.writeText($('exportOut').value); toast('Prompt copied'); } catch (e) { $('exportOut').select(); toast('Select all and copy'); } });
+on('shareBtn', 'click', async () => { try { await navigator.clipboard.writeText(location.href); toast('Link copied'); } catch (e) { toast('Copy the URL from the address bar'); } });
+
+load();
+renderStatic();
+render();
+</script>
+</body>
+</html>
